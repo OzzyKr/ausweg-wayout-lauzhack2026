@@ -47,8 +47,8 @@ sealed interface Taken {
 /**
  * The disruption-watching part of a taken trip; changes only when disruptions do.
  *
- * @property planDisruptions the disruptions of the `/plan` answer the trip came from. Used while the backend pushes
- *   none: in live mode, OJP disruptions exist only in `/plan` answers, not in `/state`.
+ * @property planDisruptions the disruptions of the `/plan` answer the trip came from. Used in live mode only, while
+ *   the backend pushes none: OJP disruptions exist only in `/plan` answers, not in `/state`.
  * @property nextUpdateId the [RouteUpdate.id] of the next banner.
  */
 data class TripWatch(
@@ -60,12 +60,6 @@ data class TripWatch(
     val planDisruptions: List<Disruption> = emptyList(),
     val nextUpdateId: Long = 1,
 )
-
-/** The disruptions to judge a taken trip by: the backend's, or the plan answer's while the backend has none. */
-internal fun currentDisruptions(
-    pushed: List<Disruption>,
-    planDisruptions: List<Disruption>,
-): List<Disruption> = pushed.ifEmpty { planDisruptions }
 
 /**
  * The live trip screen.
@@ -118,7 +112,7 @@ class TripState(
 
     /**
      * Takes [trip]. [context] are the disruptions that blocked the usual route, watched for banners too.
-     * [planDisruptions] are those of the `/plan` answer, used while the backend pushes none (live mode).
+     * [planDisruptions] are those of the `/plan` answer, used in live mode while the backend pushes none.
      */
     fun take(
         trip: Trip,
@@ -126,7 +120,7 @@ class TripState(
         context: List<Disruption>,
         planDisruptions: List<Disruption> = emptyList(),
     ) {
-        val disruptions = currentDisruptions(session.disruptions.value, planDisruptions)
+        val disruptions = session.disruptionsFor(planDisruptions)
         val impact = affects(trip, disruptions)
         watch.value =
             TripWatch(
@@ -154,16 +148,20 @@ class TripState(
     }
 
     private fun onDisruptions(disruptions: List<Disruption>) =
-        watch.update { w -> w?.let { next(it, disruptions, session.currentNow()) } }
+        watch.update { w -> w?.let { next(it, disruptions, session.currentNow(), session.isLive) } }
 }
 
-/** [w] after a new disruption state at [now]: new advice, more watched disruptions, maybe one more banner. */
+/**
+ * [w] after a new disruption state at [now]: new advice, more watched disruptions, maybe one more banner. [live]:
+ * the backend runs live, so an empty [pushed] falls back to the plan answer's disruptions.
+ */
 internal fun next(
     w: TripWatch,
     pushed: List<Disruption>,
     now: Instant,
+    live: Boolean = false,
 ): TripWatch {
-    val disruptions = currentDisruptions(pushed, w.planDisruptions)
+    val disruptions = currentDisruptions(pushed, w.planDisruptions, live)
     val taken = w.taken
     val (advice, watched) =
         when (taken) {

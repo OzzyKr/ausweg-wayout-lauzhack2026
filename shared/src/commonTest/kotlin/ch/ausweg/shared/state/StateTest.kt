@@ -390,9 +390,11 @@ class StateTest {
     fun liveModeJudgesTheTakenTripByThePlanAnswer() =
         runTest {
             // Live: /state pushes no disruptions; the fire only comes with the /plan answer.
+            api.clock = api.clock.copy(mode = Mode.LIVE, scenarioId = null)
             api.planResponse = api.planResponse?.copy(trips = listOf(ic1), disruptions = listOf(fire))
             val app = app()
             state()
+            app.plan.prefill(FakeApi.SCENARIO)
             app.findMyWay()
             runCurrent()
             app.takeTrip(ic1)
@@ -401,6 +403,40 @@ class StateTest {
             assertIs<ch.ausweg.shared.model.Advice.Wait>(trip.advice)
             assertEquals(setOf(fire.id), trip.watched)
         }
+
+    @Test
+    fun replayNeverBringsBackTheStalePlanCopy() =
+        runTest {
+            // Historical: planned during the fire; an hour after it ended the server drops it (empty list).
+            api.planResponse = api.planResponse?.copy(trips = listOf(ic1), disruptions = listOf(fire))
+            val app = app()
+            state(fire)
+            app.findMyWay()
+            runCurrent()
+            app.takeTrip(ic1)
+            runCurrent()
+            state(fire.copy(status = ch.ausweg.shared.model.DisruptionStatus.ENDED))
+            assertEquals(
+                UpdateKind.RESOLVED,
+                app.trip.ui.value
+                    ?.updates
+                    ?.first()
+                    ?.kind,
+            )
+            state()
+            val trip = assertNotNull(app.trip.ui.value)
+            assertIs<ch.ausweg.shared.model.Advice.Ok>(trip.advice)
+            assertTrue(trip.updates.none { it.kind == UpdateKind.BLOCKED })
+            assertFalse(app.session.isLive)
+        }
+
+    @Test
+    fun planDisruptionsStandInOnlyWhenLive() {
+        assertEquals(listOf(fire), currentDisruptions(emptyList(), listOf(fire), live = true))
+        assertEquals(emptyList(), currentDisruptions(emptyList(), listOf(fire), live = false))
+        val pushed = listOf(fire.copy(version = 9))
+        assertEquals(pushed, currentDisruptions(pushed, listOf(fire), live = true))
+    }
 
     @Test
     fun bannersGetUniqueIdsAfterSeeks() {

@@ -89,7 +89,7 @@ class OptionsState(
                         if (response.trips.isEmpty()) {
                             _ui.value = OptionsUi.Failed(query, LoadError.NO_CONNECTIONS)
                         } else {
-                            val disruptions = session.disruptions.value.ifEmpty { response.disruptions }
+                            val disruptions = session.disruptionsFor(response.disruptions)
                             val view = planOptions(response.trips, disruptions, session.currentNow())
                             _ui.value = OptionsUi.Ready(query, response, view)
                             refreshCommunity()

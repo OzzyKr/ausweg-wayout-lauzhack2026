@@ -119,7 +119,7 @@ class AuswegApp(
      */
     fun openShare() {
         val ready = options.ui.value as? OptionsUi.Ready
-        val disruptions = session.disruptions.value.ifEmpty { ready?.response?.disruptions.orEmpty() }
+        val disruptions = session.disruptionsFor(ready?.response?.disruptions.orEmpty())
         val source = shareSource(trip.ui.value?.taken, ready?.view?.pick, disruptions) ?: return
         val disruptionId =
             if (source.avoidsDisruptions) {
