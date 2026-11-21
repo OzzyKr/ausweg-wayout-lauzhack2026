@@ -2,13 +2,16 @@ package ch.ausweg.shared.state
 
 import ch.ausweg.shared.api.AuswegApi
 import ch.ausweg.shared.api.attempt
-import ch.ausweg.shared.model.LegMode
+import ch.ausweg.shared.disruption.affects
+import ch.ausweg.shared.model.Disruption
 import ch.ausweg.shared.model.NewNote
 import ch.ausweg.shared.model.NewRoute
 import ch.ausweg.shared.model.RouteLeg
+import ch.ausweg.shared.routing.Pick
 import ch.ausweg.shared.tips.LegStrip
-import ch.ausweg.shared.tips.StripKind
 import ch.ausweg.shared.tips.StripLeg
+import ch.ausweg.shared.tips.busStrip
+import ch.ausweg.shared.tips.legStrip
 import ch.ausweg.shared.tips.stripOf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -53,12 +56,51 @@ data class ShareUi(
 
     val canUseThisDisruption: Boolean get() = disruptionId != null
 
+    /**
+     * The checked rides follow each other: unchecking a ride in the middle would post a route with a gap (a «change»
+     * at Yverdon that leaves from Payerne). Only rides at the start or end can be left out.
+     */
+    val checkedInOneGo: Boolean
+        get() {
+            val first = checked.indexOfFirst { it }
+            val last = checked.indexOfLast { it }
+            return first >= 0 && (first..last).all { checked[it] }
+        }
+
     val canPost: Boolean
         get() =
             status != ShareStatus.POSTING &&
-                checked.any { it } &&
+                checkedInOneGo &&
                 (scope == ShareScope.ALWAYS || canUseThisDisruption)
 }
+
+/**
+ * What «Share yours» shares. [avoidsDisruptions] is false when the route goes through the disruption (a wait pick,
+ * or a taken trip that is blocked): it must not be offered as «this disruption», or later travellers would be sent
+ * onto the closed line.
+ */
+data class ShareSource(
+    val strip: LegStrip,
+    val avoidsDisruptions: Boolean,
+)
+
+/**
+ * The [taken] trip if there is one, else the options [pick]: a bus pick shares the replacement bus, not the blocked
+ * train it replaces. Null when there is nothing to share. Pure.
+ */
+fun shareSource(
+    taken: Taken?,
+    pick: Pick?,
+    disruptions: List<Disruption>,
+): ShareSource? =
+    when {
+        taken is Taken.Planned -> ShareSource(taken.strip, !affects(taken.trip, disruptions).isBlocked)
+        taken is Taken.Shared -> ShareSource(taken.strip, avoidsDisruptions = true)
+        pick is Pick.Bus -> ShareSource(busStrip(pick.bus, pick.trip), avoidsDisruptions = true)
+        pick is Pick.Wait -> ShareSource(legStrip(pick.trip), avoidsDisruptions = false)
+        pick is Pick.Go -> ShareSource(legStrip(pick.trip), avoidsDisruptions = true)
+        else -> null
+    }
 
 /** The request for [ui], or null if it can't be posted. Notes are pinned after their ride (`legIndex`). */
 fun newRoute(ui: ShareUi): NewRoute? {
@@ -67,7 +109,7 @@ fun newRoute(ui: ShareUi): NewRoute? {
     return NewRoute(
         legs =
             strip.legs.map {
-                RouteLeg(it.from, it.to, it.label, it.kind.mode(), it.departurePlatform, it.arrivalPlatform)
+                RouteLeg(it.from, it.to, it.label, it.mode, it.departurePlatform, it.arrivalPlatform)
             },
         permanent = ui.scope == ShareScope.ALWAYS,
         disruptionId = ui.disruptionId.takeIf { ui.scope == ShareScope.THIS_DISRUPTION },
@@ -80,13 +122,6 @@ fun newRoute(ui: ShareUi): NewRoute? {
             },
     )
 }
-
-private fun StripKind.mode(): LegMode =
-    when (this) {
-        StripKind.TRAIN -> LegMode.RAIL
-        StripKind.BUS, StripKind.REPLACEMENT_BUS -> LegMode.BUS
-        StripKind.OTHER -> LegMode.OTHER
-    }
 
 /** «Share a route»: pick the rides you took, pin notes on the changes, choose when it's useful, post. */
 class ShareState(

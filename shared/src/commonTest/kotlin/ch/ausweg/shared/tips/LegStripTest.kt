@@ -111,6 +111,25 @@ class LegStripTest {
     }
 
     @Test
+    fun notesOffTheChangesAreLeftOutBeforeNumbering() {
+        // A note after the last ride (legIndex 1 of 2 rides) is never drawn, so it mustn't take number 1.
+        val strip = legStrip(trip, listOf(note("last", 1, "12:00"), note("first", 0, "12:10")))
+        assertEquals(listOf(1), strip.notes.map { it.number })
+        assertEquals(listOf("first"), strip.notes.map { it.tip.id })
+    }
+
+    @Test
+    fun stripLegsKeepTheirMode() {
+        val metro =
+            trip.copy(
+                legs = listOf(Leg(LegMode.METRO, call(lausanne, "14:40"), call(yverdon, "14:50"), line = "M2")),
+            )
+        val leg = legStrip(metro).legs.single()
+        assertEquals(StripKind.OTHER, leg.kind)
+        assertEquals(LegMode.METRO, leg.mode)
+    }
+
+    @Test
     fun busStripUsesTripStopNamesWhenItCan() {
         val bus = ReplacementBus(BusStatus.SCHEDULED, from = Fx.LAUSANNE, to = Fx.PUIDOUX, eta = t("15:15"))
         val strip = busStrip(bus, trip)

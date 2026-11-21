@@ -5,6 +5,8 @@ import ch.ausweg.shared.model.StateResponse
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -71,16 +73,7 @@ const val POLLS_BEFORE_RETRY = 5
 fun AuswegApi.liveEvents(pollInterval: Duration = POLL_INTERVAL): Flow<ServerEvent> =
     flow {
         while (true) {
-            var announced = false
-            attempt {
-                events().collect { event ->
-                    if (!announced) {
-                        emit(ServerEvent.Link(LinkStatus.LIVE))
-                        announced = true
-                    }
-                    emit(event)
-                }
-            }
+            emitAll(sseUntilItFails())
             repeat(POLLS_BEFORE_RETRY) {
                 val polled = attempt { state() }.getOrNull()
                 if (polled == null) {
@@ -94,6 +87,22 @@ fun AuswegApi.liveEvents(pollInterval: Duration = POLL_INTERVAL): Flow<ServerEve
             }
         }
     }
+
+/**
+ * [AuswegApi.events] with [LinkStatus.LIVE] before the first event; completes when the stream ends or fails.
+ * `catch` only sees errors from the stream itself, so a bug in whoever collects still surfaces as it is.
+ */
+private fun AuswegApi.sseUntilItFails(): Flow<ServerEvent> =
+    flow {
+        var announced = false
+        events().collect { event ->
+            if (!announced) {
+                emit(ServerEvent.Link(LinkStatus.LIVE))
+                announced = true
+            }
+            emit(event)
+        }
+    }.catch { e -> if (e is CancellationException) throw e }
 
 /** [runCatching] for suspend calls that doesn't swallow cancellation. */
 @Suppress("TooGenericExceptionCaught") // Network errors differ per engine (IOException, JS errors…).

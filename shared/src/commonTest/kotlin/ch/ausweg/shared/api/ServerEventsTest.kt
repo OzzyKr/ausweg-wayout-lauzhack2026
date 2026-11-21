@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertNull
 
@@ -43,6 +44,18 @@ class ServerEventsTest {
             api.emit(ServerEvent.Community(3))
             val got = api.liveEvents().take(2).toList()
             assertEquals(listOf(ServerEvent.Link(LinkStatus.LIVE), ServerEvent.Community(3)), got)
+        }
+
+    @Test
+    fun aBugInTheCollectorIsNotSwallowed() =
+        runTest {
+            val api = FakeApi()
+            api.emit(ServerEvent.Community(3))
+            val e =
+                assertFailsWith<IllegalStateException> {
+                    api.liveEvents().collect { if (it is ServerEvent.Community) error("bug in onEvent") }
+                }
+            assertEquals("bug in onEvent", e.message)
         }
 
     @Test

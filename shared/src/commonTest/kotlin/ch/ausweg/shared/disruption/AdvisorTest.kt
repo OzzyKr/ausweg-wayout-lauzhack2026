@@ -51,6 +51,17 @@ class AdvisorTest {
     }
 
     @Test
+    fun alternativesThatAlreadyLeftAreIgnored() {
+        // At 15:00 the 14:40 detour has left; the 15:10 one is the only usable alternative.
+        val gone = viaYverdon("14:40", "16:10")
+        val later = viaYverdon("15:10", "16:20")
+        val advice = assertIs<Advice.Detour>(advise(ic1, listOf(fire), t("15:00"), listOf(gone, later)))
+        assertEquals(listOf(later), advice.alternatives)
+        // With only the departed one, nothing gets round: wait.
+        assertIs<Advice.Wait>(advise(ic1, listOf(fire), t("15:00"), listOf(gone)))
+    }
+
+    @Test
     fun waitWinsWithinTheMargin() {
         // Wait arrives 16:45; detour at 16:40 is only 5 min earlier: waiting is less hassle.
         val nearlySame = viaYverdon("15:10", "16:40")

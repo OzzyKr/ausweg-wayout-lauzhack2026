@@ -10,6 +10,7 @@ import ch.ausweg.shared.disruption.UpdateKind
 import ch.ausweg.shared.model.BusStatus
 import ch.ausweg.shared.model.ClockState
 import ch.ausweg.shared.model.InfoSource
+import ch.ausweg.shared.model.LegMode
 import ch.ausweg.shared.model.Location
 import ch.ausweg.shared.model.Mode
 import ch.ausweg.shared.model.ReplacementBus
@@ -18,6 +19,8 @@ import ch.ausweg.shared.model.TimelineEntry
 import ch.ausweg.shared.model.VoteValue
 import ch.ausweg.shared.routing.Pick
 import ch.ausweg.shared.routing.Stage
+import ch.ausweg.shared.tips.StripKind
+import ch.ausweg.shared.tips.legStrip
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
@@ -310,11 +313,108 @@ class StateTest {
             assertNull(newRoute(share.ui.value))
 
             share.toggle(0)
+            assertTrue(share.ui.value.canPost)
             api.failPost = true
             share.post()
             runCurrent()
             assertEquals(ShareStatus.FAILED, share.ui.value.status)
         }
+
+    @Test
+    fun aMiddleRideCantBeLeftOut() {
+        val two = legStrip(Fx.viaYverdon("14:40", "15:50")).legs
+        val three = two + two.last()
+        val ui = ShareUi(legs = three, checked = listOf(true, false, true))
+        assertFalse(ui.canPost)
+        assertNull(newRoute(ui))
+        assertTrue(ui.copy(checked = listOf(false, true, true)).canPost)
+    }
+
+    @Test
+    fun sharedRoutesKeepTheRideMode() {
+        val metro = ic1.copy(legs = ic1.legs.map { it.copy(mode = LegMode.METRO, line = "M2") })
+        val ui = ShareUi(legs = legStrip(metro).legs, checked = listOf(true))
+        assertEquals(listOf(LegMode.METRO), newRoute(ui)?.legs?.map { it.mode })
+    }
+
+    @Test
+    fun shareSourceNeverTagsARouteThroughTheDisruption() {
+        val bus = ReplacementBus(BusStatus.SCHEDULED, from = Fx.PALEZIEUX, to = Fx.VAUDERENS, eta = t("15:15"))
+        val busPick = assertNotNull(shareSource(null, Pick.Bus(bus, ic1), listOf(fire)))
+        assertEquals(
+            StripKind.REPLACEMENT_BUS,
+            busPick.strip.legs
+                .single()
+                .kind,
+        )
+        assertTrue(busPick.avoidsDisruptions)
+
+        val waitPick = assertNotNull(shareSource(null, Pick.Wait(ic1, t("16:00"), null), listOf(fire)))
+        assertFalse(waitPick.avoidsDisruptions)
+
+        val takenBlocked = shareSource(Taken.Planned(ic1, emptyList()), Pick.Go(ic1), listOf(fire))
+        assertEquals(false, takenBlocked?.avoidsDisruptions)
+        val detour = Fx.viaYverdon("14:40", "15:50")
+        assertEquals(true, shareSource(Taken.Planned(detour, emptyList()), null, listOf(fire))?.avoidsDisruptions)
+        assertNull(shareSource(null, null, listOf(fire)))
+    }
+
+    @Test
+    fun sharingAWaitPickOffersOnlyAlways() =
+        runTest {
+            api.planResponse = api.planResponse?.copy(trips = listOf(ic1))
+            val app = app()
+            state(fire)
+            app.findMyWay()
+            runCurrent()
+            assertIs<Pick.Wait>(assertIs<OptionsUi.Ready>(app.options.ui.value).view.pick)
+            app.openShare()
+            assertEquals(ShareScope.ALWAYS, app.share.ui.value.scope)
+            assertFalse(app.share.ui.value.canUseThisDisruption)
+        }
+
+    @Test
+    fun routesNeedBothStationNumbers() =
+        runTest {
+            val app = app()
+            state(fire)
+            val query = assertNotNull(app.plan.ui.value.query)
+            app.options.search(query.copy(to = query.to.copy(ref = "ch:1:x", didok = null)))
+            runCurrent()
+            val ready = assertIs<OptionsUi.Ready>(app.options.ui.value)
+            assertTrue(ready.routes.isEmpty())
+            assertTrue(api.calls.none { it.startsWith("routes") })
+        }
+
+    @Test
+    fun liveModeJudgesTheTakenTripByThePlanAnswer() =
+        runTest {
+            // Live: /state pushes no disruptions; the fire only comes with the /plan answer.
+            api.planResponse = api.planResponse?.copy(trips = listOf(ic1), disruptions = listOf(fire))
+            val app = app()
+            state()
+            app.findMyWay()
+            runCurrent()
+            app.takeTrip(ic1)
+            runCurrent()
+            val trip = assertNotNull(app.trip.ui.value)
+            assertIs<ch.ausweg.shared.model.Advice.Wait>(trip.advice)
+            assertEquals(setOf(fire.id), trip.watched)
+        }
+
+    @Test
+    fun bannersGetUniqueIdsAfterSeeks() {
+        // Seek to the fire, back before it, to it again: two BLOCKED banners with the same time and version.
+        val start = TripWatch(Taken.Planned(ic1, emptyList()), emptySet(), advice = null, disruptions = emptyList())
+        val ok = next(start, emptyList(), t("14:30"))
+        val blocked = next(ok, listOf(fire), t("14:30"))
+        val ended = fire.copy(status = ch.ausweg.shared.model.DisruptionStatus.ENDED)
+        val clear = next(blocked, listOf(ended), t("14:30"))
+        val again = next(clear, listOf(fire), t("14:30"))
+        val ids = again.updates.map { it.id }
+        assertTrue(again.updates.count { it.kind == UpdateKind.BLOCKED } >= 2)
+        assertEquals(ids.distinct(), ids)
+    }
 
     @Test
     fun communityTabVotes() =
