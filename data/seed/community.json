@@ -1,0 +1,88 @@
+{
+  "_comment": "Demo seed: illustrative community content (spec: 'seed the demo with a handful of tips'), loaded into an empty database. No real users or SBB staff wrote these. The Yverdon / Payerne detour is the one OJP returns for Lausanne - Fribourg. Station numbers are DIDOK, as in the scenarios.",
+  "tips": [
+    {
+      "id": "seed-tip-yverdon",
+      "kind": "DISRUPTION",
+      "text": "Lausanne → Fribourg while Puidoux – Vauderens was closed: IC5 to Yverdon-les-Bains, then the S30 via Payerne. About 1 h 25, and it ran normally.",
+      "createdAt": "2026-09-12T15:40:00Z",
+      "sections": [{ "from": 8504012, "to": 8504021 }],
+      "disruptionId": "seed-2026-09-12",
+      "staffEndorsed": true,
+      "votes": { "up": 14, "down": 1, "stillValid": 3 }
+    },
+    {
+      "id": "seed-tip-bern",
+      "kind": "DISRUPTION",
+      "text": "Going via Bern also works, but it took me a lot longer than the Yverdon route.",
+      "createdAt": "2026-09-12T16:05:00Z",
+      "sections": [{ "from": 8504012, "to": 8504021 }],
+      "disruptionId": "seed-2026-09-12",
+      "votes": { "up": 4, "down": 2 }
+    },
+    {
+      "id": "seed-tip-renens-bus",
+      "kind": "DISRUPTION",
+      "text": "Lausanne → Morges during a Renens – Morges closure: the first replacement buses from Renens VD were full, the next ones had seats. Worth waiting 10 minutes.",
+      "createdAt": "2026-09-03T17:30:00Z",
+      "sections": [{ "from": 8501118, "to": 8501037 }],
+      "disruptionId": "seed-2026-09-03",
+      "votes": { "up": 6 }
+    },
+    {
+      "id": "seed-tip-lausanne-1-7",
+      "kind": "TRANSFER",
+      "text": "4 minutes from platform 1 to platform 7 is enough if you get off at the front of the train.",
+      "createdAt": "2026-08-30T07:15:00Z",
+      "station": 8501120,
+      "platformFrom": "1",
+      "platformTo": "7",
+      "votes": { "up": 9, "down": 1 }
+    },
+    {
+      "id": "seed-tip-fribourg-2-1",
+      "kind": "TRANSFER",
+      "text": "Platform 2 → 1 in 3 minutes worked for me, just don't stop on the way.",
+      "createdAt": "2026-09-02T17:50:00Z",
+      "station": 8504100,
+      "platformFrom": "2",
+      "platformTo": "1",
+      "votes": { "up": 3 }
+    },
+    {
+      "id": "seed-note-yverdon-change",
+      "kind": "DISRUPTION",
+      "text": "6 minutes to change from the IC5 to the S30 here was plenty.",
+      "createdAt": "2026-09-12T15:45:00Z",
+      "station": 8504200,
+      "sections": [{ "from": 8504012, "to": 8504021 }],
+      "disruptionId": "seed-2026-09-12",
+      "routeId": "seed-route-yverdon",
+      "legIndex": 0,
+      "votes": { "up": 5 }
+    }
+  ],
+  "routes": [
+    {
+      "id": "seed-route-yverdon",
+      "from": { "ref": "8501120", "name": "Lausanne", "didok": 8501120 },
+      "to": { "ref": "8504100", "name": "Fribourg/Freiburg", "didok": 8504100 },
+      "legs": [
+        {
+          "from": { "ref": "8501120", "name": "Lausanne", "didok": 8501120 },
+          "to": { "ref": "8504200", "name": "Yverdon-les-Bains", "didok": 8504200 },
+          "line": "IC5"
+        },
+        {
+          "from": { "ref": "8504200", "name": "Yverdon-les-Bains", "didok": 8504200 },
+          "to": { "ref": "8504100", "name": "Fribourg/Freiburg", "didok": 8504100 },
+          "line": "S30"
+        }
+      ],
+      "createdAt": "2026-09-12T15:45:00Z",
+      "sections": [{ "from": 8504012, "to": 8504021 }],
+      "disruptionId": "seed-2026-09-12",
+      "votes": { "up": 11, "down": 1 }
+    }
+  ]
+}

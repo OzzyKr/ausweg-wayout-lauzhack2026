@@ -16,12 +16,16 @@ import kotlin.time.Duration
  * - `state`: [ch.ausweg.shared.model.StateResponse] whenever the set of known disruptions changes,
  *   e.g. because the (simulated) clock passed a new publication.
  *
- * Both are sent once on connect. Deciding whether a change matters to the user's route is the app's job.
+ * - `community`: the community revision (a number) whenever a tip, route, vote or endorsement changes:
+ *   the app refetches `/tips` and `/routes`.
+ *
+ * All three are sent once on connect. Deciding whether a change matters to the user's route is the app's job.
  */
 fun Route.eventsRoute(backend: Backend) {
     sse("/events") {
         var lastRevision = -1L
         var lastDisruptions: List<Disruption>? = null
+        var lastCommunity = -1L
         var sinceHeartbeat = Duration.ZERO
         while (currentCoroutineContext().isActive) {
             val revision = backend.mode.revision.value
@@ -34,6 +38,11 @@ fun Route.eventsRoute(backend: Backend) {
             if (state.disruptions != lastDisruptions) {
                 send(AuswegJson.encodeToString(state), event = "state")
                 lastDisruptions = state.disruptions
+            }
+            val community = backend.community.revision.value
+            if (community != lastCommunity) {
+                send(community.toString(), event = "community")
+                lastCommunity = community
             }
             delay(backend.sseTick)
             sinceHeartbeat += backend.sseTick

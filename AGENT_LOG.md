@@ -23,4 +23,5 @@ Outcome: `pending` → set by the human reviewer to `accepted` / `changed: why` 
 | 2026-11-21 17:31 | claude/shared | Advice contract, Disruption sections/bus, affects/advise stubs | pending |
 | 2026-11-21 17:42 | claude/shared | Implement affects() and advise() + 26 tests | pending |
 | 2026-11-21 18:30 | claude/server | Scenario ingest, timeline, OJP /plan + /stops, rerouting | pending |
+| 2026-11-21 18:41 | claude/server | Community tips, routes, votes (SQLite) + ranking | pending |
 | 2026-11-21 18:49 | claude/server | Review #7: closing kinds only, rerouted needs new trips | pending |
