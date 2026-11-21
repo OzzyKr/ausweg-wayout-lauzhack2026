@@ -102,7 +102,7 @@ CommunityRoute { id, from, to, legs: [{from, to, line?, mode, departurePlatform?
                 permanent, sections, reasonCode?, disruptionId?, staffEndorsed, votes }
 RankedTip     { tip, match: SAME_DISRUPTION|SIMILAR_DISRUPTION|PERMANENT, score }
 RankedRoute   { route, notes: List<Tip>, match, score }
-Scenario      { id, title, start, end, disruptionIds, suggestedFrom?, suggestedTo? }
+Scenario      { id, title, start, end, disruptionIds, suggestedFrom?, suggestedTo?, suggestedFromName?, suggestedToName? }
 PlanRequest   { from, to, departAt?, via: List<String> }
 PlanResponse  { trips: List<Trip>, disruptions, source: LIVE|SHIFTED|FIXTURE, situations, rerouted }
 ```
