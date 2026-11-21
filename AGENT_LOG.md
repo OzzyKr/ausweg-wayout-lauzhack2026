@@ -28,3 +28,4 @@ Outcome: `pending` → set by the human reviewer to `accepted` / `changed: why` 
 | 2026-11-21 20:25 | claude/shared | Richer OJP situation parsing + stop-event request | pending |
 | 2026-11-21 20:35 | claude/shared | OJP situation → Disruption with keyword rules + tests | pending |
 | 2026-11-21 21:41 | claude/shared | Review #12: own log row back to pending | pending |
+| 2026-11-21 21:42 | claude/shared | Review #13: shorter station name inside longer one | pending |

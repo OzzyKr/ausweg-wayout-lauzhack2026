@@ -148,6 +148,16 @@ class LiveSituationsTest {
     }
 
     @Test
+    fun aShorterStationNameIsNotMatchedInsideALongerOne() {
+        val s =
+            situation(
+                "Der Bahnverkehr zwischen Ostermundigen und Bern Wankdorf ist unterbrochen.",
+                stops = listOf("Bern Wankdorf" to 8516161, "Ostermundigen" to 8507002, "Bern" to 8507000),
+            )
+        assertEquals(listOf(Section(8507002, 8516161)), s.toDisruption(evening)?.sections)
+    }
+
+    @Test
     fun withoutStationNumbersThereIsNothingToMatch() {
         val s = Situation("s1", summary = "Information", stops = listOf(StopRef("de:08212:90", "Karlsruhe")))
         assertNull(s.toDisruption(evening))

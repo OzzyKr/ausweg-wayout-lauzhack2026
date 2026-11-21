@@ -142,7 +142,8 @@ private fun Situation.texts(): DisruptionText =
 
 /**
  * Every «between A and B» in [text] where A and B are names of [stops] (both [folded]). A name must be followed
- * by a non-name character, so «Genève» doesn't match «Genève-Aéroport».
+ * by a non-name character, so «Genève» doesn't match «Genève-Aéroport», and a longer stop name that matches
+ * there wins, so «Bern» doesn't match «Bern Wankdorf».
  */
 private fun sectionsIn(
     text: String,
@@ -159,9 +160,14 @@ private fun sectionsIn(
         }
     return SituationKeywords.BETWEEN
         .flatMap { (between, and) ->
+            fun matches(
+                a: String,
+                b: String,
+            ) = text.containsPhrase("$between $a $and $b")
             named.flatMap { (a, from) ->
                 named.mapNotNull { (b, to) ->
-                    if (from != to && text.containsPhrase("$between $a $and $b")) Section(from, to) else null
+                    val longer = named.any { (c, _) -> c.length > b.length && c.startsWith(b) && matches(a, c) }
+                    if (from != to && !longer && matches(a, b)) Section(from, to) else null
                 }
             }
         }.distinctBy { setOf(it.from, it.to) }
