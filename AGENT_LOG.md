@@ -26,3 +26,4 @@ Outcome: `pending` → set by the human reviewer to `accepted` / `changed: why` 
 | 2026-11-21 18:41 | claude/server | Community tips, routes, votes (SQLite) + ranking | pending |
 | 2026-11-21 18:49 | claude/server | Review #7: closing kinds only, rerouted needs new trips | pending |
 | 2026-11-21 19:37 | claude/server | #8 into main, scenario stop names, AGENTS.md table | pending |
+| 2026-11-21 19:51 | claude/shared | App state: API client, SSE, i18n, screen state + tests | pending |
