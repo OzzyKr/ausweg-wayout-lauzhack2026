@@ -1,0 +1,165 @@
+{
+  "incident": {
+    "id": "2195005195853",
+    "kultId": 24666,
+    "title": "Interruption Puidoux - Vauderens et Lucens (incendie)",
+    "line": "Lausanne - Fribourg/Freiburg",
+    "lineStations": ["Lausanne", "Pully-Nord", "La Conversion", "Bossière", "Grandvaux", "Puidoux", "Moreillon", "Palézieux", "Oron", "Vauderens", "Romont FR", "Villaz-St-Pierre", "Chénens", "Cottens FR", "Neyruz FR", "Avry-Matran", "Villars-sur-Glâne", "Fribourg/Freiburg"],
+    "otherStations": ["Moudon", "Lucens"],
+    "stationIds": {"Lausanne": 8501120, "Pully-Nord": 8504000, "La Conversion": 8504010, "Bossière": 8504003, "Grandvaux": 8504011, "Puidoux": 8504012, "Moreillon": 8504007, "Palézieux": 8504014, "Oron": 8504020, "Vauderens": 8504021, "Romont FR": 8504023, "Villaz-St-Pierre": 8504024, "Chénens": 8504025, "Cottens FR": 8504026, "Neyruz FR": 8504027, "Avry-Matran": 8501632, "Villars-sur-Glâne": 8504030, "Fribourg/Freiburg": 8504100, "Moudon": 8504120, "Lucens": 8504121},
+    "lines": ["IC1", "IR15", "R8", "R9", "S40", "S41"],
+    "replayStart": "2026-09-25T16:00:00+02:00",
+    "replayEnd": "2026-09-25T18:30:00+02:00"
+  },
+  "events": [
+    {
+      "t": "2026-09-25T16:03:18+02:00", "source": "VIA", "kind": "DETECTED",
+      "summary": "Incident créé dans VIA : incendie à Palézieux.",
+      "raw": "alea_erstellungszeitpunkt | alea_ort_strecke=PAL | alea_ereignisgrund=Brand"
+    },
+    {
+      "t": "2026-09-25T16:07:35+02:00", "source": "VIA", "kind": "INFO",
+      "summary": "Première publication de l'incident (texte non disponible dans les données).",
+      "raw": "zeitpunkt_erstpublikation"
+    },
+    {
+      "t": "2026-09-25T16:19:00+02:00", "source": "INTERNAL", "kind": "INTERRUPTION",
+      "sections": [{ "from": "Puidoux", "to": "Vauderens" }],
+      "summary": "Les trains font demi-tour à Romont, Palézieux, Vauderens et Puidoux.",
+      "raw": "722 rebrousse à Romontsur 727, circule Romont - St. Gallen comme 70727. / 24852 rebrousse à Palézieux sur 24961, circule Palézieux-Morat comme 94961. / 24652 rebrousse à Vauderens sur 24561, circule Vauderens - Fribourg comme 94561. / 24961 rebrousse à Puidoux I sur 24852, circule Puidoux - Allaman comme 94852."
+    },
+    {
+      "t": "2026-09-25T16:19:31+02:00", "source": "VIA", "kind": "INFO",
+      "summary": "Première recommandation de voyage publiée.",
+      "raw": "zeitpunkt_erstpublikation_reiseempfehlung"
+    },
+    {
+      "t": "2026-09-25T16:27:22+02:00", "source": "PUBLIC", "kind": "INTERRUPTION",
+      "sections": [{ "from": "Puidoux", "to": "Vauderens" }, { "from": "Puidoux", "to": "Lucens" }],
+      "expectedEnd": { "time": "2026-09-25T18:00:00+02:00", "type": "APPROX" },
+      "summary": "Trafic interrompu entre Puidoux et Vauderens et entre Puidoux et Lucens (incendie), jusqu'à 18:00 environ.",
+      "raw": "Interruption Puidoux - Vauderens et Lucens | UNTIL_APPROX_DATE_TIME 2026-09-25 18:00:00.000 +0200 | Le trafic ferroviaire est interrompu sur la ligne Lausanne - Fribourg/Freiburg entre Puidoux et Vauderens, ainsi que sur la ligne Lausanne - Payerne entre Puidoux et Lucens. Un incendie en est la cause. La restriction dure jusqu'à 18:00 environ. Les lignes IC1, IR15, R8, R9, S40 et S41 sont concernées."
+    },
+    {
+      "t": "2026-09-25T16:37:00+02:00", "source": "INTERNAL", "kind": "INFO",
+      "summary": "Les trains grandes lignes venant de Fribourg et de Genève font demi-tour à Lausanne et à Romont.",
+      "raw": "Le rebroussement a Lausanne 727 Lausanne 72524 / 722 rebrousse à Lausanne sur 2524, circule Lausanne - Geneve Aeroport comme 72524. / 2529 wendet in Lausanne auf 722, verkehrt Lausanne -Geneve Aeroport als 70722. / 729 rebrousse à Lausanne sur 2526, circule Lausanne -Geneve Aeroport comme 72526. / 2526 rebrousse à Romont sur 2529, circule Romont -Luzern comme 72529."
+    },
+    {
+      "t": "2026-09-25T16:37:53+02:00", "source": "PUBLIC", "kind": "CAUSE",
+      "cause": "Incendie sur un transformateur en gare de Palézieux",
+      "summary": "Incendie sur un transformateur à Palézieux, plus de courant sur la ligne. Des bus de remplacement sont en cours d'organisation.",
+      "raw": "Interruption du traficférroviaire: Un incendie s’est déclaré sur un transformateur en gare de Palézieux. L’alimentation électrique de la caténaire a été interrompue, ce qui entraîne la suspension des circulations entre Puidoux et Vauderens ainsi qu’entre Puidoux et Moudon. Nous mettons tout en œuvre pour organiser des bus de remplacement et vous tiendrons informés dès que possible des retards et des solutions de transport. Merci de votre compréhension."
+    },
+    {
+      "t": "2026-09-25T16:43:00+02:00", "source": "INTERNAL", "kind": "PROGNOSIS",
+      "expectedEnd": { "time": "2026-09-25T18:00:00+02:00", "type": "APPROX" },
+      "summary": "Premier pronostic interne : reprise vers 18:00.",
+      "raw": "Premiere prognostic 18:00"
+    },
+    {
+      "t": "2026-09-25T16:45:00+02:00", "source": "INTERNAL", "kind": "REPLACEMENT_BUS",
+      "bus": {
+        "status": "SCHEDULED", "from": "Palézieux", "eta": "2026-09-25T17:15:00+02:00", "capacityPerBus": 150, "count": 4,
+        "routes": [
+          { "from": "Palézieux", "to": "Lausanne" },
+          { "from": "Palézieux", "to": "Puidoux" },
+          { "from": "Palézieux", "to": "Vauderens" },
+          { "from": "Palézieux", "to": "Romont FR" }
+        ]
+      },
+      "summary": "4 bus de 150 places au départ de Palézieux (vers Lausanne, Puidoux, Vauderens, Romont), en gare à 17:15.",
+      "raw": "4 Bus Intertours 150 places pour PALEZIEUX -LAUSANNE, PALEZIEUX-PUIDOUX, PALEZIEUX -VAUDERENS PALEZIEUX-ROMONT. En gare de départ pour 17h15."
+    },
+    {
+      "t": "2026-09-25T16:49:37+02:00", "source": "PUBLIC", "kind": "INFO",
+      "summary": "Un technicien est en route pour contrôler le transformateur et la ligne de contact.",
+      "raw": "Complément d'information: Un technicien du piquet ligne de contact est en route pour contrôler le transformateur et la ligne de contact, et entreprendre les mesures nécessaires pour lever le dérangement."
+    },
+    {
+      "t": "2026-09-25T16:54:06+02:00", "source": "PUBLIC", "kind": "CAUSE",
+      "cause": "Un oiseau a provoqué un court-circuit sur la ligne",
+      "summary": "Cause : un oiseau a provoqué un court-circuit. Il doit être retiré avant les contrôles.",
+      "raw": "Cause de l'incendie: Un oiseau s’est posé sur la ligne et a provoqué un court‑circuit. L’animal devra être évacué avant que les techniciens puissent contrôler les installations et tenter de rétablir l’alimentation."
+    },
+    {
+      "t": "2026-09-25T16:59:19+02:00", "source": "PUBLIC", "kind": "REPLACEMENT_BUS",
+      "bus": { "status": "PUBLISHED" },
+      "summary": "Des bus vont vers les gares où les trains font demi-tour, mais pas assez de places. Reportez votre voyage ou prenez un autre itinéraire.",
+      "raw": "Service de remplacement: Des bus sont en route vers les gares de rebroussement des trains, mais leur capacité est insuffisante. Nous recommandons à nos clients de reporter leur voyage ou d'emprunter un autre itinéraire."
+    },
+    {
+      "t": "2026-09-25T17:11:00+02:00", "source": "INTERNAL", "kind": "REPLACEMENT_BUS",
+      "bus": { "status": "SCHEDULED", "from": "Lucens", "eta": "2026-09-25T17:10:00+02:00" },
+      "summary": "Un bus pour le trafic régional part de Lucens à 17:10.",
+      "raw": "Bus part Lucens à 17.10 trafic regional"
+    },
+    {
+      "t": "2026-09-25T17:11:50+02:00", "source": "PUBLIC", "kind": "INFO",
+      "sections": [{ "from": "Puidoux", "to": "Lucens" }],
+      "summary": "Correction : l'interruption sur la ligne de Payerne va jusqu'à Lucens (et non Moudon).",
+      "raw": "Interruption du traficférroviaire: Un incendie s’est déclaré sur un transformateur en gare de Palézieux. L’alimentation électrique de la caténaire a été interrompue, ce qui entraîne la suspension des circulations entre Puidoux et Vauderens ainsi qu’entre Puidoux et Lucens. Nous mettons tout en œuvre pour organiser des bus de remplacement et vous tiendrons informés dès que possible des retards et des solutions de transport. Merci de votre compréhension."
+    },
+    {
+      "t": "2026-09-25T17:29:00+02:00", "source": "INTERNAL", "kind": "INFO",
+      "summary": "Le personnel en gare de Lausanne demande d'où partent les bus de remplacement.",
+      "raw": "bonjour, selon les écrans des bus de remplacements circulent depuis la gare CFF de Lausanne. Pouvez-vous nous dire d’ou partent ces bus sur la place ? Quai F ? Devant l’hôtel Continental ?"
+    },
+    {
+      "t": "2026-09-25T17:46:01+02:00", "source": "PUBLIC", "kind": "PROGNOSIS",
+      "expectedEnd": { "time": "2026-09-25T18:45:00+02:00", "type": "APPROX" },
+      "summary": "Fin prévue repoussée à 18:45 environ.",
+      "raw": "Interruption Puidoux - Vauderens et Lucens | UNTIL_APPROX_DATE_TIME 2026-09-25 18:45:00.000 +0200"
+    },
+    {
+      "t": "2026-09-25T17:52:51+02:00", "source": "PUBLIC", "kind": "PROGNOSIS",
+      "expectedEnd": { "time": "2026-09-25T18:30:00+02:00", "type": "APPROX" },
+      "confidence": "LOW",
+      "summary": "On étudie la remise sous tension d'une voie. Pronostic provisoire : 18:30.",
+      "raw": "Pronostic provisoire: La possibilité de réenclencher une voie est à l'étude. Un pronostic provisoire est fixé à 18h30."
+    },
+    {
+      "t": "2026-09-25T17:56:00+02:00", "source": "INTERNAL", "kind": "RESTORATION",
+      "sections": [{ "from": "Puidoux", "to": "Vauderens" }, { "from": "Palézieux", "to": "Moudon" }],
+      "summary": "Courant rétabli entre Puidoux et Vauderens et entre Palézieux et Moudon.",
+      "raw": "Tension rétablie PUI - VD + PAL - MD"
+    },
+    {
+      "t": "2026-09-25T18:00:00+02:00", "source": "INTERNAL", "kind": "PROGNOSIS",
+      "expectedEnd": { "time": "2026-09-25T18:00:00+02:00", "type": "APPROX" },
+      "summary": "Le pronostic interne de 18:00 est maintenu.",
+      "raw": "La prognostic 18:00 est maintenue."
+    },
+    {
+      "t": "2026-09-25T18:09:00+02:00", "source": "INTERNAL", "kind": "RESTORATION",
+      "firstTrains": {
+        "Romont FR -> Genève-Aéroport": ["2530"],
+        "Lausanne -> St. Gallen": ["733"],
+        "Fribourg/Freiburg -> Genève-Aéroport": ["728"]
+      },
+      "summary": "Premiers trains grandes lignes proposés : 2530 Romont - Genève-Aéroport, 733 Lausanne - St-Gall, 728 Fribourg - Genève-Aéroport.",
+      "raw": "Proposition pour les premiers trains FV: 2530 ROM - GEAP 733 LS - SG 728 FRI - GEAP"
+    },
+    {
+      "t": "2026-09-25T18:09:57+02:00", "source": "PUBLIC", "kind": "RESTORATION",
+      "summary": "Le courant est rétabli sur la ligne. Les trains vont pouvoir reprendre.",
+      "raw": "Retablissment: Le courant est rétabli sur la ligne. La circulation des trains va pouvoir reprendre."
+    },
+    {
+      "t": "2026-09-25T18:10:00+02:00", "source": "INTERNAL", "kind": "INFO",
+      "summary": "Le dispositif de remplacement prend fin à 18:30.",
+      "raw": "Fin du concept à 18h30"
+    },
+    {
+      "t": "2026-09-25T18:15:07+02:00", "source": "PUBLIC", "kind": "ENDED",
+      "sections": [{ "from": "Puidoux", "to": "Vauderens" }, { "from": "Puidoux", "to": "Lucens" }],
+      "summary": "Trafic rétabli entre Puidoux et Vauderens et entre Puidoux et Lucens. Quelques retards et suppressions restent possibles.",
+      "raw": "[ENDED] Trafic rétabli: Puidoux - Vauderens et Lucens | Le trafic ferroviaire est rétabli sur la ligne Lausanne - Fribourg/Freiburg entre Puidoux et Vauderens, ainsi que sur la ligne Lausanne - Payerne entre Puidoux et Lucens. Quelques retards et suppressions restent possibles."
+    },
+    {
+      "t": "2026-09-25T18:26:45+02:00", "source": "PUBLIC", "kind": "INFO",
+      "summary": "Dérangement levé. Des retards restent possibles.",
+      "raw": "Dérangement levé : Le dérangement est levé. Des retards peuvent toutefois encore survenir."
+    }
+  ]
+}

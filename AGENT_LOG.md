@@ -5,8 +5,18 @@ Outcome: `pending` → set by the human reviewer to `accepted` / `changed: why` 
 
 | Time | Agent | Done | Outcome |
 |---|---|---|---|
-| 2026-11-21 14:13 | claude/infra | Wrote AGENTS.md, AGENT_LOG.md, PR template | pending |
-| 2026-11-21 14:13 | claude/infra | Empty KMP scaffold (shared, composeApp, server), ktlint + detekt | pending |
-| 2026-11-21 14:13 | claude/infra | GitHub Actions CI (lint, tests, Android, web, server) + CD | pending |
-| 2026-11-21 15:24 | claude/shared | OJP 2.0 trip/stop requests + parser, journey models | pending |
-| 2026-11-21 16:53 | claude/shared | OJP fixtures: official station names and DIDOK numbers | pending |
+| 2026-11-21 14:13 | claude/infra | Wrote AGENTS.md, AGENT_LOG.md, PR template | accepted |
+| 2026-11-21 14:13 | claude/infra | Empty KMP scaffold (shared, composeApp, server), ktlint + detekt | accepted |
+| 2026-11-21 14:13 | claude/infra | GitHub Actions CI (lint, tests, Android, web, server) + CD | accepted |
+| 2026-11-21 15:07 | claude/server | Replay clock, events ingest, /state, replay API, SSE | accepted |
+| 2026-11-21 15:15 | claude/server | Fixed timeline.py file lookup for raw subfolders | accepted |
+| 2026-11-21 15:15 | claude/server | Puidoux–Vauderens scenario JSON + validate.py | accepted |
+| 2026-11-21 15:19 | claude/server | Merged data README, format doc, removed duplicate pack | accepted |
+| 2026-11-21 15:24 | claude/shared | OJP 2.0 trip/stop requests + parser, journey models | accepted |
+| 2026-11-21 15:37 | claude/server | Untracked internal SBB PDF; fixed Renens–Morges scenario from source | accepted |
+| 2026-11-21 15:53 | claude/server | Official station names + station check in validate.py | accepted |
+| 2026-11-21 16:45 | claude/server | DIDOK station numbers in scenarios (stationIds) | accepted |
+| 2026-11-21 16:46 | claude/server | pitch_stats.py: pitch numbers recomputed from VIA | accepted |
+| 2026-11-21 16:53 | claude/shared | OJP fixtures: official station names and DIDOK numbers | accepted |
+| 2026-11-21 17:00 | claude/server | Review #4: merge main, sections list, advise sketch, log outcomes | changed: fit server contract |
+
