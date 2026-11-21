@@ -8,3 +8,4 @@ Outcome: `pending` → set by the human reviewer to `accepted` / `changed: why` 
 | 2026-11-21 14:13 | claude/infra | Wrote AGENTS.md, AGENT_LOG.md, PR template | pending |
 | 2026-11-21 14:13 | claude/infra | Empty KMP scaffold (shared, composeApp, server), ktlint + detekt | pending |
 | 2026-11-21 14:13 | claude/infra | GitHub Actions CI (lint, tests, Android, web, server) + CD | pending |
+| 2026-11-21 15:07 | claude/server | Replay clock, events ingest, /state, replay API, SSE | pending |

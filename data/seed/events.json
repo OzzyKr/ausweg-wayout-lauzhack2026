@@ -1,0 +1,77 @@
+{
+  "note": "PROVISIONAL format and data, see server/.../ingest/ProvisionalEventsFormat.kt. Replaced once the data owner fixes events.json. Texts paraphrased from the public live ticker.",
+  "scenarios": [
+    {
+      "id": "puidoux-fire-2026-09-25",
+      "title": "Fire between Puidoux and Vauderens, 25 Sep 2026",
+      "start": "2026-09-25T16:15:00+02:00",
+      "end": "2026-09-25T18:45:00+02:00",
+      "disruptionIds": ["2195005195853"],
+      "suggestedFrom": "8501120",
+      "suggestedTo": "8504100"
+    }
+  ],
+  "updates": [
+    {
+      "disruptionId": "2195005195853",
+      "version": 1,
+      "publishedAt": "2026-09-25T16:31:08+02:00",
+      "lifecycle": "INFO",
+      "reasonCode": "EG_110",
+      "affectedStops": [8504012, 8504021],
+      "lines": ["IC1", "IR15", "R8", "R9", "S40", "S41"],
+      "expectedEnd": "2026-09-25T18:00:00+02:00",
+      "hints": ["LINE_CLOSED"],
+      "texts": {
+        "en": {
+          "title": "Interrupted service: Puidoux - Vauderens and Lucens",
+          "body": "No trains between Puidoux and Vauderens (Lausanne - Fribourg line) and between Puidoux and Lucens (Lausanne - Payerne line) because of a fire. Expected to last until about 18:00."
+        },
+        "fr": {
+          "title": "Interruption: Puidoux - Vauderens et Lucens",
+          "body": "Pas de trains entre Puidoux et Vauderens (ligne Lausanne - Fribourg) ni entre Puidoux et Lucens (ligne Lausanne - Payerne) en raison d'un incendie. Durée prévue jusqu'à 18h00 environ."
+        }
+      }
+    },
+    {
+      "disruptionId": "2195005195853",
+      "version": 2,
+      "publishedAt": "2026-09-25T17:46:01+02:00",
+      "lifecycle": "INFO",
+      "reasonCode": "EG_110",
+      "affectedStops": [8504012, 8504021],
+      "lines": ["IC1", "IR15", "R8", "R9", "S40", "S41"],
+      "expectedEnd": "2026-09-25T18:45:00+02:00",
+      "hints": ["LINE_CLOSED"],
+      "texts": {
+        "en": {
+          "title": "Interrupted service: Puidoux - Vauderens and Lucens",
+          "body": "No trains between Puidoux and Vauderens and between Puidoux and Lucens because of a fire. Now expected to last until about 18:45."
+        },
+        "fr": {
+          "title": "Interruption: Puidoux - Vauderens et Lucens",
+          "body": "Pas de trains entre Puidoux et Vauderens ni entre Puidoux et Lucens en raison d'un incendie. Durée prévue désormais jusqu'à 18h45 environ."
+        }
+      }
+    },
+    {
+      "disruptionId": "2195005195853",
+      "version": 3,
+      "publishedAt": "2026-09-25T18:15:07+02:00",
+      "lifecycle": "ENDED",
+      "reasonCode": "EG_110",
+      "affectedStops": [8504012, 8504021],
+      "lines": ["IC1", "IR15", "R8", "R9", "S40", "S41"],
+      "texts": {
+        "en": {
+          "title": "Service resumed: Puidoux - Vauderens and Lucens",
+          "body": "Trains are running again between Puidoux and Vauderens and between Puidoux and Lucens. Some delays and cancellations are still possible."
+        },
+        "fr": {
+          "title": "Trafic rétabli: Puidoux - Vauderens et Lucens",
+          "body": "Les trains circulent à nouveau entre Puidoux et Vauderens et entre Puidoux et Lucens. Des retards et suppressions restent possibles."
+        }
+      }
+    }
+  ]
+}

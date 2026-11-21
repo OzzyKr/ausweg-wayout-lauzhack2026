@@ -1,0 +1,12 @@
+{
+  "updates": [
+    { "disruptionId": "A", "version": 1, "publishedAt": "2026-09-01T08:00:00Z", "lifecycle": "INFO",
+      "affectedStops": [8501120], "texts": { "en": { "title": "Restriction A" } } },
+    { "disruptionId": "A", "version": 2, "publishedAt": "2026-09-01T08:30:00Z", "lifecycle": "INFO",
+      "affectedStops": [8501120], "unknownField": true },
+    { "disruptionId": "A", "version": 3, "publishedAt": "2026-09-01T09:00:00Z", "lifecycle": "ENDED" },
+    { "disruptionId": "B", "version": 1, "publishedAt": "2026-09-01T08:15:00Z", "lifecycle": "INFO",
+      "texts": { "de": { "title": "Unterbruch B" } } },
+    { "disruptionId": "B", "version": 2, "publishedAt": "2026-09-01T08:20:00Z", "lifecycle": "DELETED" }
+  ]
+}
