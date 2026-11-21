@@ -31,12 +31,15 @@ enum class UpdateKind {
  *
  * @property disruption the latest version of the disruption it's about, if any.
  * @property advice the advice for the taken trip after the change (null for community routes, which have no times).
+ * @property id unique among the banners of one taken trip, set by `TripState` (lists key on it: two banners can
+ *   have the same kind, time and version after replay seeks).
  */
 data class RouteUpdate(
     val kind: UpdateKind,
     val at: Instant,
     val disruption: Disruption?,
     val advice: Advice?,
+    val id: Long = 0,
 )
 
 /** The advice for the taken trip under one disruption state, and that state. */

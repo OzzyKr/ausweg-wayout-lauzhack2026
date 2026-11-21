@@ -96,7 +96,12 @@ class AuswegApp(
     fun takeTrip(trip: Trip) {
         val ready = options.ui.value as? OptionsUi.Ready
         val all = ready?.response?.trips.orEmpty()
-        this.trip.take(trip, all.filter { it.id != trip.id }, ready?.view?.blockedBy.orEmpty())
+        this.trip.take(
+            trip,
+            all.filter { it.id != trip.id },
+            ready?.view?.blockedBy.orEmpty(),
+            ready?.response?.disruptions.orEmpty(),
+        )
         navigator.select(Tab.TRIPS)
     }
 

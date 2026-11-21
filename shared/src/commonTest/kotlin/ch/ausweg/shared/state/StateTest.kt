@@ -387,6 +387,36 @@ class StateTest {
         }
 
     @Test
+    fun liveModeJudgesTheTakenTripByThePlanAnswer() =
+        runTest {
+            // Live: /state pushes no disruptions; the fire only comes with the /plan answer.
+            api.planResponse = api.planResponse?.copy(trips = listOf(ic1), disruptions = listOf(fire))
+            val app = app()
+            state()
+            app.findMyWay()
+            runCurrent()
+            app.takeTrip(ic1)
+            runCurrent()
+            val trip = assertNotNull(app.trip.ui.value)
+            assertIs<ch.ausweg.shared.model.Advice.Wait>(trip.advice)
+            assertEquals(setOf(fire.id), trip.watched)
+        }
+
+    @Test
+    fun bannersGetUniqueIdsAfterSeeks() {
+        // Seek to the fire, back before it, to it again: two BLOCKED banners with the same time and version.
+        val start = TripWatch(Taken.Planned(ic1, emptyList()), emptySet(), advice = null, disruptions = emptyList())
+        val ok = next(start, emptyList(), t("14:30"))
+        val blocked = next(ok, listOf(fire), t("14:30"))
+        val ended = fire.copy(status = ch.ausweg.shared.model.DisruptionStatus.ENDED)
+        val clear = next(blocked, listOf(ended), t("14:30"))
+        val again = next(clear, listOf(fire), t("14:30"))
+        val ids = again.updates.map { it.id }
+        assertTrue(again.updates.count { it.kind == UpdateKind.BLOCKED } >= 2)
+        assertEquals(ids.distinct(), ids)
+    }
+
+    @Test
     fun communityTabVotes() =
         runTest {
             val app = app()
