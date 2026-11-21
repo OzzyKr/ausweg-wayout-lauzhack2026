@@ -9,3 +9,11 @@ Outcome: `pending` → set by the human reviewer to `accepted` / `changed: why` 
 | 2026-11-21 14:13 | claude/infra | Empty KMP scaffold (shared, composeApp, server), ktlint + detekt | pending |
 | 2026-11-21 14:13 | claude/infra | GitHub Actions CI (lint, tests, Android, web, server) + CD | pending |
 | 2026-11-21 15:07 | claude/server | Replay clock, events ingest, /state, replay API, SSE | pending |
+| 2026-11-21 15:15 | claude/server | Fixed timeline.py file lookup for raw subfolders | pending |
+| 2026-11-21 15:15 | claude/server | Puidoux–Vauderens scenario JSON + validate.py | pending |
+| 2026-11-21 15:19 | claude/server | Merged data README, format doc, removed duplicate pack | pending |
+| 2026-11-21 15:37 | claude/server | Untracked internal SBB PDF; fixed Renens–Morges scenario from source | pending |
+| 2026-11-21 15:53 | claude/server | Official station names + station check in validate.py | pending |
+| 2026-11-21 16:45 | claude/server | DIDOK station numbers in scenarios (stationIds) | pending |
+| 2026-11-21 16:46 | claude/server | pitch_stats.py: pitch numbers recomputed from VIA | pending |
+| 2026-11-21 17:00 | claude/server | Review #4: merge main, sections list, advise sketch, log outcomes | pending |
