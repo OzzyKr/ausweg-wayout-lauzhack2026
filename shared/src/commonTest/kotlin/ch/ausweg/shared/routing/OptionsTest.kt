@@ -1,9 +1,17 @@
 package ch.ausweg.shared.routing
 
 import ch.ausweg.shared.disruption.Fx
+import ch.ausweg.shared.disruption.Fx.FRIBOURG
+import ch.ausweg.shared.disruption.Fx.LAUSANNE
+import ch.ausweg.shared.disruption.Fx.PALEZIEUX
+import ch.ausweg.shared.disruption.Fx.PUIDOUX
+import ch.ausweg.shared.disruption.Fx.ROMONT
+import ch.ausweg.shared.disruption.Fx.VAUDERENS
 import ch.ausweg.shared.disruption.Fx.fire
 import ch.ausweg.shared.disruption.Fx.ic1
+import ch.ausweg.shared.disruption.Fx.leg
 import ch.ausweg.shared.disruption.Fx.t
+import ch.ausweg.shared.disruption.Fx.trip
 import ch.ausweg.shared.disruption.Fx.viaYverdon
 import ch.ausweg.shared.model.Advice
 import ch.ausweg.shared.model.BusStatus
@@ -54,6 +62,22 @@ class OptionsTest {
         val v = planOptions(listOf(slow, ic1), listOf(fire), now)
         assertEquals(Pick.Wait(ic1, t("16:00"), EndType.APPROX), v.pick)
         assertEquals(listOf(TripOption(slow, blocked = false)), v.others)
+    }
+
+    @Test
+    fun waitingShowsTheFirstTrainAfterTheReopeningNotTheBlockedOne() {
+        // The line reopens at 16:00: the 16:15 IC1 is the one to wait for, not the blocked 14:45 one.
+        val slow = viaYverdon("14:40", "17:00")
+        val next =
+            trip(
+                "ic1-next",
+                "16:15",
+                "17:00",
+                leg(LAUSANNE, PUIDOUX, PALEZIEUX, VAUDERENS, ROMONT, FRIBOURG, dep = "16:15"),
+            )
+        val v = planOptions(listOf(slow, ic1, next), listOf(fire), now)
+        assertEquals(Pick.Wait(next, t("16:00"), EndType.APPROX), v.pick)
+        assertEquals(listOf(TripOption(slow, blocked = false), TripOption(ic1, blocked = true)), v.others)
     }
 
     @Test

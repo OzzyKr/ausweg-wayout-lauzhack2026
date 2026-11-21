@@ -82,7 +82,12 @@ fun planOptions(
         when (advice) {
             is Advice.Ok -> Pick.Go(usual)
             is Advice.Detour -> Pick.Go(advice.alternatives.first())
-            is Advice.Wait -> Pick.Wait(usual, advice.until, advice.endType)
+            is Advice.Wait ->
+                Pick.Wait(
+                    firstAfterReopening(trips, disruptions, advice.until) ?: usual,
+                    advice.until,
+                    advice.endType,
+                )
             is Advice.TakeBus -> Pick.Bus(advice.bus, usual)
         }
     val usualImpact = affects(usual, disruptions)
@@ -97,6 +102,22 @@ fun planOptions(
         others = trips.filter { it.id != pick.trip.id }.map { TripOption(it, it.id in blockedIds) },
     )
 }
+
+/**
+ * The trip to take once the line reopens at [until]: the earliest-arriving one among [trips] that leaves at or after
+ * it and isn't blocked. Null when the end is unknown or the search has no such trip (then the card shows the usual
+ * trip, which can't run before [until]).
+ */
+private fun firstAfterReopening(
+    trips: List<Trip>,
+    disruptions: List<Disruption>,
+    until: Instant?,
+): Trip? =
+    until?.let { end ->
+        trips
+            .filter { it.departure >= end && !affects(it, disruptions).isBlocked }
+            .minByOrNull { it.arrival }
+    }
 
 /** Door-to-door time of the trip. */
 val Trip.duration: Duration get() = arrival - departure
