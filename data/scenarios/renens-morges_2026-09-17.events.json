@@ -6,6 +6,7 @@
     "line": "Lausanne - Genève",
     "lineStations": ["Lausanne", "Renens VD", "Lonay-Préverenges", "Morges-St-Jean", "Morges", "St-Prex", "Etoy", "Allaman", "Rolle", "Gland", "Nyon", "Coppet", "Tannay", "Mies", "Pont-Céard", "Versoix", "Creux-de-Genthod", "Genthod-Bellevue", "Les Tuileries", "Chambésy", "Genève-Sécheron", "Genève", "Genève-Aéroport"],
     "otherStations": ["Bussigny"],
+    "stationIds": {"Lausanne": 8501120, "Renens VD": 8501118, "Lonay-Préverenges": 8501048, "Morges-St-Jean": 8501047, "Morges": 8501037, "St-Prex": 8501036, "Etoy": 8501042, "Allaman": 8501035, "Rolle": 8501033, "Gland": 8501031, "Nyon": 8501030, "Coppet": 8501023, "Tannay": 8501015, "Mies": 8501014, "Pont-Céard": 8501013, "Versoix": 8501022, "Creux-de-Genthod": 8501012, "Genthod-Bellevue": 8501021, "Les Tuileries": 8501011, "Chambésy": 8501020, "Genève-Sécheron": 8516283, "Genève": 8501008, "Genève-Aéroport": 8501026, "Bussigny": 8501117},
     "lines": ["TGV", "EC", "IC1", "IR15", "IR57", "IR90", "IR95", "RE33", "R1", "R2", "R3", "R4", "R8", "R9"],
     "replayStart": "2026-09-17T17:20:00+02:00",
     "replayEnd": "2026-09-18T00:05:00+02:00"

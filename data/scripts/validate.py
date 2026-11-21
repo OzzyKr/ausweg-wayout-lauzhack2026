@@ -18,7 +18,7 @@ KINDS = {"DETECTED", "CAUSE", "INTERRUPTION", "RESTRICTION", "SCOPE_CHANGE", "PR
          "REPLACEMENT_BUS", "RESTORATION", "INFO", "ENDED"}
 END_TYPES = {"APPROX", "AT_LEAST", "UNKNOWN"}
 CONFIDENCE = {"LOW", "MEDIUM", "HIGH"}
-INCIDENT_KEYS = {"id", "kultId", "title", "line", "lineStations", "lines", "replayStart", "replayEnd"}
+INCIDENT_KEYS = {"id", "kultId", "title", "line", "lineStations", "stationIds", "lines", "replayStart", "replayEnd"}
 OPTIONAL_INCIDENT_KEYS = {"otherStations"}
 EVENT_KEYS = {"t", "source", "kind", "section", "expectedEnd", "confidence", "bus", "firstTrains", "noAlternative",
               "cause", "summary", "raw"}
@@ -56,6 +56,14 @@ def check(path):
     for k in inc.keys() - INCIDENT_KEYS - OPTIONAL_INCIDENT_KEYS:
         errors.append(f"incident: clé inconnue {k}")
     stations = set(inc.get("lineStations", [])) | set(inc.get("otherStations", []))
+    ids = inc.get("stationIds", {})
+    for name in stations - ids.keys():
+        errors.append(f"incident.stationIds: numéro manquant pour {name!r}")
+    for name, number in ids.items():
+        if name not in stations:
+            errors.append(f"incident.stationIds: {name!r} absente de lineStations / otherStations")
+        if not (isinstance(number, int) and 8_500_000 <= number <= 8_599_999):
+            errors.append(f"incident.stationIds: numéro DIDOK invalide pour {name!r} : {number!r}")
     start = ts(inc.get("replayStart"), "incident.replayStart", errors)
     end = ts(inc.get("replayEnd"), "incident.replayEnd", errors)
 

@@ -6,6 +6,7 @@
     "line": "Lausanne - Fribourg/Freiburg",
     "lineStations": ["Lausanne", "Pully-Nord", "La Conversion", "Bossière", "Grandvaux", "Puidoux", "Moreillon", "Palézieux", "Oron", "Vauderens", "Romont FR", "Villaz-St-Pierre", "Chénens", "Cottens FR", "Neyruz FR", "Avry-Matran", "Villars-sur-Glâne", "Fribourg/Freiburg"],
     "otherStations": ["Moudon", "Lucens"],
+    "stationIds": {"Lausanne": 8501120, "Pully-Nord": 8504000, "La Conversion": 8504010, "Bossière": 8504003, "Grandvaux": 8504011, "Puidoux": 8504012, "Moreillon": 8504007, "Palézieux": 8504014, "Oron": 8504020, "Vauderens": 8504021, "Romont FR": 8504023, "Villaz-St-Pierre": 8504024, "Chénens": 8504025, "Cottens FR": 8504026, "Neyruz FR": 8504027, "Avry-Matran": 8501632, "Villars-sur-Glâne": 8504030, "Fribourg/Freiburg": 8504100, "Moudon": 8504120, "Lucens": 8504121},
     "lines": ["IC1", "IR15", "R8", "R9", "S40", "S41"],
     "replayStart": "2026-09-25T16:00:00+02:00",
     "replayEnd": "2026-09-25T18:30:00+02:00"

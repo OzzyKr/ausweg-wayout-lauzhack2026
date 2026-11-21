@@ -13,3 +13,4 @@ Outcome: `pending` → set by the human reviewer to `accepted` / `changed: why` 
 | 2026-11-21 15:19 | claude/server | Merged data README, format doc, removed duplicate pack | pending |
 | 2026-11-21 15:37 | claude/server | Untracked internal SBB PDF; fixed Renens–Morges scenario from source | pending |
 | 2026-11-21 15:53 | claude/server | Official station names + station check in validate.py | pending |
+| 2026-11-21 16:45 | claude/server | DIDOK station numbers in scenarios (stationIds) | pending |
