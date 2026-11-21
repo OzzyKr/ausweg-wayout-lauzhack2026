@@ -175,6 +175,7 @@
   "share.scope_always_sub": "Ein allgemeiner Tipp für diese Reise",
   "share.post": "Route veröffentlichen",
   "share.failed": "Route konnte nicht veröffentlicht werden. Nochmals versuchen.",
+  "share.gap": "Wähle Verbindungen, die aufeinander folgen: Weglassen kannst du nur welche am Anfang oder am Ende.",
   "alerts.title": "Störungen",
   "alerts.subtitle": "Wie von der SBB veröffentlicht"
 }

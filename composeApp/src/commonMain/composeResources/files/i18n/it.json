@@ -175,6 +175,7 @@
   "share.scope_always_sub": "Un consiglio generale per questo viaggio",
   "share.post": "Pubblica percorso",
   "share.failed": "Impossibile pubblicare il percorso. Riprova.",
+  "share.gap": "Scegli coincidenze che si susseguono: puoi togliere solo quelle all'inizio o alla fine.",
   "alerts.title": "Perturbazioni",
   "alerts.subtitle": "Come pubblicate dalle FFS"
 }

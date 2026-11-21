@@ -110,6 +110,9 @@ fun ShareScreen(app: AuswegApp) {
                     app.share.scope(ShareScope.ALWAYS)
                 }
             }
+            if (ui.hasGap) {
+                Text(t("share.gap"), Modifier.padding(top = 12.dp), color = MaterialTheme.colorScheme.error)
+            }
             if (ui.status == ShareStatus.FAILED) {
                 Text(t("share.failed"), Modifier.padding(top = 12.dp), color = MaterialTheme.colorScheme.error)
             }

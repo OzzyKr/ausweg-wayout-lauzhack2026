@@ -67,6 +67,9 @@ data class ShareUi(
             return first >= 0 && (first..last).all { checked[it] }
         }
 
+    /** Some rides are checked, but not in one go: the share screen says why it can't post (`share.gap`). */
+    val hasGap: Boolean get() = checked.any { it } && !checkedInOneGo
+
     val canPost: Boolean
         get() =
             status != ShareStatus.POSTING &&

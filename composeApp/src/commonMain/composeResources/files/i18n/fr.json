@@ -175,6 +175,7 @@
   "share.scope_always_sub": "Un conseil général pour ce trajet",
   "share.post": "Publier l'itinéraire",
   "share.failed": "Publication impossible. Réessayez.",
+  "share.gap": "Choisissez des correspondances qui se suivent : seules celles du début ou de la fin peuvent être retirées.",
   "alerts.title": "Perturbations",
   "alerts.subtitle": "Telles que publiées par les CFF"
 }
