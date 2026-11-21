@@ -13,6 +13,7 @@ kotlinx-serialization = "1.9.0"
 ktlint-gradle = "13.1.0"
 ktor = "3.3.3"
 logback = "1.5.18"
+sqlite-jdbc = "3.47.1.0"
 # 0.91.x is the last line built with Kotlin 2.2 (1.0.x needs Kotlin 2.4).
 xmlutil = "0.91.3"
 
@@ -37,6 +38,7 @@ ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor"
 ktor-server-sse = { module = "io.ktor:ktor-server-sse", version.ref = "ktor" }
 ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
 logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite-jdbc" }
 xmlutil-core = { module = "io.github.pdvrieze.xmlutil:core", version.ref = "xmlutil" }
 
 [plugins]

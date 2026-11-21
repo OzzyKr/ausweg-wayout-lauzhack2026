@@ -12,6 +12,8 @@ import ch.ausweg.server.replay.ModeController
 import ch.ausweg.server.replay.Snapshot
 import ch.ausweg.server.replay.SystemWallClock
 import ch.ausweg.server.replay.WallClock
+import ch.ausweg.server.tips.CommunityService
+import ch.ausweg.server.tips.CommunityStore
 import ch.ausweg.shared.model.StateResponse
 import kotlinx.serialization.Serializable
 import org.slf4j.LoggerFactory
@@ -22,18 +24,38 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
+/**
+ * Optional parts of the [Backend]; the defaults work offline (no OJP, in-memory community store).
+ *
+ * @property ojp trip and stop search; null builds one without a key (fixtures only).
+ * @property hubs DIDOK numbers to reroute through.
+ */
+class BackendServices(
+    val ojp: OjpService? = null,
+    val hubs: List<Int> = emptyList(),
+    val community: CommunityStore = CommunityStore.inMemory(),
+    val staffToken: String? = null,
+)
+
 /** The server's long-lived parts, built once and handed to the routes. */
 class Backend(
     val source: DisruptionSource,
     wall: WallClock = SystemWallClock,
     val sseTick: Duration = 1.seconds,
     val sseHeartbeat: Duration = 5.seconds,
-    ojp: OjpService = OjpService(transport = null, wall = wall),
-    hubs: List<Int> = emptyList(),
+    services: BackendServices = BackendServices(),
 ) {
     val mode = ModeController(source, wall)
 
-    val plan = PlanService(ojp, hubs, state = { state() }, stations = { source.load().stations })
+    val plan =
+        PlanService(
+            ojp = services.ojp ?: OjpService(transport = null, wall = wall),
+            hubs = services.hubs,
+            state = { state() },
+            stations = { source.load().stations },
+        )
+
+    val community = CommunityService(services.community, state = { state() }, staffToken = services.staffToken)
 
     /** The clock plus every disruption known at [at] (default: the clock's current time), and their timeline. */
     fun state(at: Instant? = null): StateResponse {
@@ -53,7 +75,9 @@ class Backend(
             val transport = config.ojpKey?.let(::HttpOjpTransport)
             if (transport == null) log.warn("No OJP_API_TOKEN: trip search uses recorded fixtures only")
             val ojp = OjpService(transport, OjpFixtures(config.fixturesDir, config.recordOjp))
-            return Backend(source, ojp = ojp, hubs = readHubs(config.hubsFile))
+            val community = CommunityStore.open(config.dbFile).also { it.seedIfEmpty(config.communitySeed) }
+            val services = BackendServices(ojp, readHubs(config.hubsFile), community, config.staffToken?.value)
+            return Backend(source, services = services)
         }
 
         private fun readHubs(file: Path): List<Int> =

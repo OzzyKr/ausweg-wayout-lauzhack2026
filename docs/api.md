@@ -30,8 +30,33 @@ Ended disruptions stay visible for 1 h («service resumed»). Active ones with n
 | GET | `/events` | | Server-sent events, see below |
 | GET | `/stops?q=<name>` | | `List<Location>`, best first · 400 without `q` |
 | POST | `/plan` | `PlanRequest {from, to, departAt?, via = []}` | `PlanResponse` · 503 when OJP and the fixtures can't answer |
+| GET | `/tips?stations=<didok,…>&disruptionId=` | | `List<RankedTip>`, best first |
+| POST | `/tips` | `NewTip {kind, text, station?, platformFrom?, platformTo?, disruptionId?}` | `Tip` (201) · 400 |
+| POST | `/tips/{id}/vote` | `VoteRequest {voterId, value: UP\|DOWN\|STILL_VALID\|OUTDATED}` | `Tip` · 400 / 404 |
+| POST | `/tips/{id}/endorse` | header `X-Staff-Token` | 204 · 403 / 404 |
+| GET | `/routes?from=<didok>&to=<didok>` | | `List<RankedRoute>` (with notes), best first |
+| POST | `/routes` | `NewRoute {legs, permanent = false, disruptionId?, notes: [{legIndex, text}]}` | `CommunityRoute` (201) · 400 |
+| POST | `/routes/{id}/vote` | `VoteRequest` | `CommunityRoute` · 400 / 404 |
+| POST | `/routes/{id}/endorse` | header `X-Staff-Token` | 204 · 403 / 404 |
 
-Coming next: `/tips`, `/routes` (community).
+## Community: tips, routes, votes
+
+Stored in SQLite (`data/ausweg.db`, gitignored; `AUSWEG_DB` to move it), seeded from `data/seed/community.json`
+(illustrative demo content) when empty. Everything is anonymous: `voterId` is a random id the app makes up once and
+keeps; one vote per voter and target, a new vote replaces the old one.
+
+- **Disruption tips** (`kind: DISRUPTION`) are written during a disruption: send its `disruptionId` and the server
+  copies its sections and cause onto the tip. They are never deleted. They show while that disruption is active
+  (`match: SAME_DISRUPTION`), and again on a later disruption that shares a station (and the cause, when both have
+  one): `SIMILAR_DISRUPTION`, «from a similar disruption on `createdAt`», with «still valid / outdated» votes.
+- **Transfer tips** (`kind: TRANSFER`, a `station` and optional platform pair) always show (`PERMANENT`);
+  `?stations=` limits them to the trip's stations.
+- **Routes**: a leg strip; `notes` are tips pinned after leg `legIndex` (the change), returned with the route.
+  `permanent: true` («always») routes always show for that from → to; others like disruption tips.
+- **Ranking** (shared `rankTips` / `rankRoutes`): same disruption, then similar, then permanent; inside each,
+  score = up − down + ½ (still valid − outdated) + 5 if staff-endorsed, halved every 30 days for disruption content.
+- New tips and routes are stamped with the backend clock (the replayed time in historical mode).
+- **Staff endorsement** (demo): `X-Staff-Token` must equal `STAFF_TOKEN`; without it configured, nobody can endorse.
 
 ## Planning: `POST /plan`, `GET /stops`
 
@@ -56,6 +81,7 @@ name search over the scenario stations.
 |---|---|---|
 | `clock` | `ClockState` | on connect, on every replay/mode change, and every ~5 s as a heartbeat |
 | `state` | `StateResponse` | on connect, and whenever the set of known disruption versions changes (every scenario event is a new version, so the timeline goes out with it) |
+| `community` | revision number | on connect, and after every new tip, route, vote or endorsement: refetch `/tips` and `/routes` |
 
 The server checks once per second, so several quick changes can arrive as one event. Whether a change affects
 the user's route (and deserves the update banner) is decided in the app by the shared `advise()` logic.
@@ -70,6 +96,12 @@ Disruption    { id, version, publishedAt, status: ACTIVE|ENDED, reasonCode?, aff
                 hints: List<String> (LINE_CLOSED blocks, NO_ALTERNATIVE), sections: List<{from, to}> (DIDOK),
                 bus?: {status: ORDERED|SCHEDULED|PUBLISHED, from?, to?, eta?, count?, routes} }
 TimelineEntry { disruptionId, t, source: VIA|INTERNAL|PUBLIC, kind, summary }
+Tip           { id, kind: DISRUPTION|TRANSFER, text, createdAt, station?, platformFrom?, platformTo?, sections,
+                reasonCode?, disruptionId?, routeId?, legIndex?, staffEndorsed, votes: {up, down, stillValid, outdated} }
+CommunityRoute { id, from, to, legs: [{from, to, line?, mode, departurePlatform?, arrivalPlatform?}], createdAt,
+                permanent, sections, reasonCode?, disruptionId?, staffEndorsed, votes }
+RankedTip     { tip, match: SAME_DISRUPTION|SIMILAR_DISRUPTION|PERMANENT, score }
+RankedRoute   { route, notes: List<Tip>, match, score }
 Scenario      { id, title, start, end, disruptionIds, suggestedFrom?, suggestedTo? }
 PlanRequest   { from, to, departAt?, via: List<String> }
 PlanResponse  { trips: List<Trip>, disruptions, source: LIVE|SHIFTED|FIXTURE, situations, rerouted }
@@ -101,3 +133,5 @@ The old provisional `data/seed/events.json` (`AUSWEG_EVENTS`) is only used when 
 | `AUSWEG_DATA_DIR` | `data` | Base folder for scenarios, fixtures and hubs |
 | `AUSWEG_SCENARIOS` | `data/scenarios` | Scenario folder |
 | `AUSWEG_EVENTS` | `data/seed/events.json` | Old provisional events file (fallback) |
+| `AUSWEG_DB` | `data/ausweg.db` | SQLite file for tips, routes and votes (falls back to memory if it can't be opened) |
+| `STAFF_TOKEN` | `STAFF_TOKEN` in `.env` | Token for `X-Staff-Token` endorsements (demo only) |
