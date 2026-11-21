@@ -52,7 +52,8 @@ class OjpParserTripTest {
     @Test
     fun intermediateStopsIncludingSkippedOnes() {
         val intermediate = trip("T-direct").legs.single().intermediate
-        assertEquals(listOf(8504012, 8504021), intermediate.map { it.stop.didok })
+        // Puidoux and Romont FR (official names and DIDOK numbers from data/scenarios stationIds).
+        assertEquals(listOf(8504012, 8504023), intermediate.map { it.stop.didok })
         assertTrue(intermediate[0].notServiced)
         assertFalse(intermediate[1].notServiced)
         assertEquals(Instant.parse("2026-09-25T15:45:00Z"), intermediate[1].arrival!!.timetabled)
@@ -70,7 +71,7 @@ class OjpParserTripTest {
         assertEquals("ch:1:sloid:4012:2:2", walk.from.stop.ref)
         assertEquals("ch:1:sloid:4012", walk.to.stop.ref)
         assertEquals(8504012, walk.to.stop.didok)
-        assertEquals("Puidoux-Chexbres, gare (bus de remplacement)", walk.to.stop.name)
+        assertEquals("Puidoux, gare (bus de remplacement)", walk.to.stop.name)
         assertEquals(Instant.parse("2026-09-25T15:38:00Z"), walk.from.departure!!.timetabled)
         assertEquals(Instant.parse("2026-09-25T15:42:00Z"), walk.to.arrival!!.timetabled)
 

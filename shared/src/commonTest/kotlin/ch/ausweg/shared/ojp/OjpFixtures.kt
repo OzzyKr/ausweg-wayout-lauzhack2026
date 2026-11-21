@@ -93,14 +93,14 @@ object OjpFixtures {
                 </LegBoard>
                 <LegIntermediate>
                   <siri:StopPointRef>ch:1:sloid:4012:1:1</siri:StopPointRef>
-                  <StopPointName><Text xml:lang="de">Puidoux-Chexbres</Text></StopPointName>
+                  <StopPointName><Text xml:lang="de">Puidoux</Text></StopPointName>
                   <ServiceArrival><TimetabledTime>2026-09-25T15:31:00Z</TimetabledTime></ServiceArrival>
                   <ServiceDeparture><TimetabledTime>2026-09-25T15:31:00Z</TimetabledTime></ServiceDeparture>
                   <Order>2</Order>
                   <NotServicedStop>true</NotServicedStop>
                 </LegIntermediate>
                 <LegIntermediate>
-                  <siri:StopPointRef>ch:1:sloid:4021:1:1</siri:StopPointRef>
+                  <siri:StopPointRef>ch:1:sloid:4023:1:1</siri:StopPointRef>
                   <StopPointName><Text xml:lang="de">Romont FR</Text></StopPointName>
                   <ServiceArrival><TimetabledTime>2026-09-25T15:45:00Z</TimetabledTime></ServiceArrival>
                   <ServiceDeparture><TimetabledTime>2026-09-25T15:46:00Z</TimetabledTime></ServiceDeparture>
@@ -160,7 +160,7 @@ object OjpFixtures {
                 </LegBoard>
                 <LegAlight>
                   <siri:StopPointRef>ch:1:sloid:4012:2:2</siri:StopPointRef>
-                  <StopPointName><Text xml:lang="de">Puidoux-Chexbres</Text></StopPointName>
+                  <StopPointName><Text xml:lang="de">Puidoux</Text></StopPointName>
                   <PlannedQuay><Text xml:lang="de">2</Text></PlannedQuay>
                   <ServiceArrival><TimetabledTime>2026-09-25T15:38:00Z</TimetabledTime></ServiceArrival>
                   <Order>4</Order>
@@ -170,7 +170,7 @@ object OjpFixtures {
                   <JourneyRef>ch:1:sjyid:100001:30-001</JourneyRef>
                   <Mode><PtMode>rail</PtMode></Mode>
                   <PublishedServiceName><Text xml:lang="de">S3</Text></PublishedServiceName>
-                  <DestinationText><Text xml:lang="de">Puidoux-Chexbres</Text></DestinationText>
+                  <DestinationText><Text xml:lang="de">Puidoux</Text></DestinationText>
                 </Service>
               </TimedLeg>
             </Leg>
@@ -181,11 +181,11 @@ object OjpFixtures {
                 <TransferType>walk</TransferType>
                 <LegStart>
                   <siri:StopPointRef>ch:1:sloid:4012:2:2</siri:StopPointRef>
-                  <Name><Text xml:lang="de">Puidoux-Chexbres</Text></Name>
+                  <Name><Text xml:lang="de">Puidoux</Text></Name>
                 </LegStart>
                 <LegEnd>
                   <StopPlaceRef>ch:1:sloid:4012</StopPlaceRef>
-                  <Name><Text xml:lang="de">Puidoux-Chexbres, gare (bus de remplacement)</Text></Name>
+                  <Name><Text xml:lang="de">Puidoux, gare (bus de remplacement)</Text></Name>
                 </LegEnd>
                 <TimeWindowStart>2026-09-25T15:38:00Z</TimeWindowStart>
                 <TimeWindowEnd>2026-09-25T15:42:00Z</TimeWindowEnd>
@@ -197,7 +197,7 @@ object OjpFixtures {
               <TimedLeg>
                 <LegBoard>
                   <siri:StopPointRef>ch:1:sloid:4012:10:10</siri:StopPointRef>
-                  <StopPointName><Text xml:lang="de">Puidoux-Chexbres, gare</Text></StopPointName>
+                  <StopPointName><Text xml:lang="de">Puidoux, gare</Text></StopPointName>
                   <ServiceDeparture><TimetabledTime>2026-09-25T15:45:00Z</TimetabledTime></ServiceDeparture>
                   <Order>1</Order>
                 </LegBoard>
