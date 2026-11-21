@@ -7,8 +7,6 @@ import ch.ausweg.shared.i18n.pickLanguage
 import ch.ausweg.shared.model.Disruption
 import ch.ausweg.shared.model.RankedRoute
 import ch.ausweg.shared.model.Trip
-import ch.ausweg.shared.routing.trip
-import ch.ausweg.shared.tips.legStrip
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -111,28 +109,27 @@ class AuswegApp(
     }
 
     /**
-     * «Share yours»: shares the taken trip if there is one, else the current pick. «This disruption» is offered
-     * when a disruption blocked the usual route.
+     * «Share yours»: shares the taken trip if there is one, else the current pick ([shareSource]). «This disruption»
+     * is offered when a disruption blocked the usual route and the shared route gets round it.
      */
     fun openShare() {
-        val taken = trip.ui.value?.taken
         val ready = options.ui.value as? OptionsUi.Ready
-        val strip =
-            taken?.strip ?: ready
-                ?.view
-                ?.pick
-                ?.trip
-                ?.let(::legStrip) ?: return
+        val disruptions = session.disruptions.value.ifEmpty { ready?.response?.disruptions.orEmpty() }
+        val source = shareSource(trip.ui.value?.taken, ready?.view?.pick, disruptions) ?: return
         val disruptionId =
-            ready
-                ?.view
-                ?.blockedBy
-                ?.firstOrNull()
-                ?.id
-                ?: trip.ui.value
-                    ?.watched
-                    ?.firstOrNull { id -> session.disruptions.value.any { it.id == id } }
-        share.start(strip.legs, disruptionId)
+            if (source.avoidsDisruptions) {
+                ready
+                    ?.view
+                    ?.blockedBy
+                    ?.firstOrNull()
+                    ?.id
+                    ?: trip.ui.value
+                        ?.watched
+                        ?.firstOrNull { id -> disruptions.any { it.id == id } }
+            } else {
+                null
+            }
+        share.start(source.strip.legs, disruptionId)
         navigator.push(Screen.Share)
     }
 

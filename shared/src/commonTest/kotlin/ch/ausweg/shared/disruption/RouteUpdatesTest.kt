@@ -97,6 +97,23 @@ class RouteUpdatesTest {
     }
 
     @Test
+    fun seekingBackBeforeTheDisruptionGivesNoBanner() {
+        // The fire was published 14:27; a seek back to 14:00 removes it, but nothing reopened.
+        val ok = Advice.Ok()
+        assertNull(routeUpdate(RouteCheck(ok, listOf(fire)), RouteCheck(ok, emptyList()), watched, t("14:00")))
+    }
+
+    @Test
+    fun anEndedDisruptionGivesNoBusOrEndBanner() {
+        val ended = fire.copy(status = DisruptionStatus.ENDED)
+        val withBus = ended.copy(bus = ReplacementBus(BusStatus.SCHEDULED, Fx.PALEZIEUX, eta = t("15:15")))
+        val noEnd = ended.copy(expectedEnd = null)
+        val ok = Advice.Ok()
+        assertNull(routeUpdate(RouteCheck(ok, listOf(ended)), RouteCheck(ok, listOf(withBus)), watched, now))
+        assertNull(routeUpdate(RouteCheck(ok, listOf(ended)), RouteCheck(ok, listOf(noEnd)), watched, now))
+    }
+
+    @Test
     fun movedEndOnAWatchedDisruption() {
         val later = fire.copy(expectedEnd = t("16:30"))
         val u = routeUpdate(RouteCheck(null, listOf(fire)), RouteCheck(null, listOf(later)), watched, now)

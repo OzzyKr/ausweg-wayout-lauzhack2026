@@ -18,7 +18,9 @@ val DEFAULT_WAIT_MARGIN: Duration = 5.minutes
  *
  * Rules, in order:
  * 1. `affects(trip)` not blocked -> [Advice.Ok] with its warnings and skipped stops.
- * 2. Unblocked alternatives (`affects(alt)` not blocked), earliest arrival first; replacement-bus trips count.
+ * 2. Unblocked alternatives (`affects(alt)` not blocked) that haven't left yet (`departure >= now`), earliest
+ *    arrival first; replacement-bus trips count. Callers re-run this as the clock moves, with the trips of an
+ *    older search, so trips that already left must not come back as the best detour.
  * 3. Every blocking disruption has an `expectedEnd`: waitArrival = `max(now, trip.departure, latest end)`
  *    + trip duration. Wait if no alternative, or `waitArrival <= best.arrival + waitMargin` -> [Advice.Wait]
  *    (WAIT_IS_FASTER), else [Advice.Detour] (DETOUR_IS_FASTER).
@@ -38,7 +40,10 @@ fun advise(
     val impact = affects(trip, disruptions)
     if (!impact.isBlocked) return Advice.Ok(impact.warnings, impact.skippedStops)
 
-    val usable = alternatives.filter { !affects(it, disruptions).isBlocked }.sortedBy { it.arrival }
+    val usable =
+        alternatives
+            .filter { it.departure >= now && !affects(it, disruptions).isBlocked }
+            .sortedBy { it.arrival }
     val best = usable.firstOrNull()
     val lastToEnd = lastToEnd(impact.blocking)
 

@@ -31,6 +31,15 @@ class OptionsTest {
     }
 
     @Test
+    fun theClockMovingOnDropsDetoursThatLeft() {
+        // Planned at 14:30; at 14:50 the 14:40 detour has left, so only the 15:00 one can be the pick.
+        val early = viaYverdon("14:40", "15:50")
+        val later = viaYverdon("15:00", "16:10")
+        val v = planOptions(listOf(early, later, ic1), listOf(fire), t("14:50"))
+        assertEquals(Pick.Go(later), v.pick)
+    }
+
+    @Test
     fun nothingBlockedPicksTheFirstTrip() {
         val detour = viaYverdon("14:40", "15:50")
         val v = planOptions(listOf(ic1, detour), emptyList(), now)

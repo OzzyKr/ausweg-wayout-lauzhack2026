@@ -27,3 +27,4 @@ Outcome: `pending` → set by the human reviewer to `accepted` / `changed: why` 
 | 2026-11-21 18:49 | claude/server | Review #7: closing kinds only, rerouted needs new trips | pending |
 | 2026-11-21 19:37 | claude/server | #8 into main, scenario stop names, AGENTS.md table | pending |
 | 2026-11-21 19:51 | claude/shared | App state: API client, SSE, i18n, screen state + tests | pending |
+| 2026-11-21 21:43 | claude/shared | Fix #10 review: departed picks, share, routes, banners | pending |

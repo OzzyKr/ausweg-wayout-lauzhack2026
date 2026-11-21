@@ -52,8 +52,8 @@ data class RouteCheck(
  * - Advice changes come first: Ok → blocked ([UpdateKind.BLOCKED]), blocked → Ok ([UpdateKind.RESOLVED]), or a
  *   different blocked advice ([UpdateKind.ADVICE_CHANGED]: other kind, other `until`, other best detour or bus).
  * - Otherwise only [watched] disruptions count (the ones that blocked the usual route when the trip was taken, and
- *   the ones on the trip): ended or gone ([UpdateKind.LINE_REOPENED]), new or changed bus
- *   ([UpdateKind.BUS_RUNNING]), moved expected end ([UpdateKind.END_CHANGED]). New text alone gives no banner.
+ *   the ones on the trip): ended or gone ([UpdateKind.LINE_REOPENED]), and while still active, new or changed bus
+ *   ([UpdateKind.BUS_RUNNING]) or moved expected end ([UpdateKind.END_CHANGED]). New text alone gives no banner.
  *
  * Advice is null for routes without times; then only watched disruptions count.
  */
@@ -73,7 +73,7 @@ fun routeUpdate(
     val old = before.disruptions.associateBy { it.id }
     val new = after.disruptions.associateBy { it.id }
     return watched.sorted().firstNotNullOfOrNull { id ->
-        disruptionChange(old[id], new[id])?.let { (kind, d) -> RouteUpdate(kind, now, d, newAdvice) }
+        disruptionChange(old[id], new[id], now)?.let { (kind, d) -> RouteUpdate(kind, now, d, newAdvice) }
     }
 }
 
@@ -106,15 +106,23 @@ private fun Advice.blocking(): List<Disruption> =
         is Advice.TakeBus -> impact.blocking
     }
 
+/**
+ * A watched disruption that is gone counts as reopened only if [now] is after it was published: a replay seek back
+ * to before it existed also removes it, and that's not news for the traveller. Bus and end changes only count
+ * while it is still active.
+ */
 private fun disruptionChange(
     old: Disruption?,
     new: Disruption?,
+    now: Instant,
 ): Pair<UpdateKind, Disruption>? {
     val wasActive = old?.status == DisruptionStatus.ACTIVE
+    val isActive = new?.status == DisruptionStatus.ACTIVE
     return when {
         old == null -> null
-        new == null -> if (wasActive) UpdateKind.LINE_REOPENED to old else null
+        new == null -> if (wasActive && now >= old.publishedAt) UpdateKind.LINE_REOPENED to old else null
         wasActive && new.status == DisruptionStatus.ENDED -> UpdateKind.LINE_REOPENED to new
+        !isActive -> null
         new.bus != null && new.bus != old.bus -> UpdateKind.BUS_RUNNING to new
         new.expectedEnd != old.expectedEnd -> UpdateKind.END_CHANGED to new
         else -> null

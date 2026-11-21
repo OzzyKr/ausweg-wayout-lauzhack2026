@@ -115,11 +115,17 @@ class OptionsState(
             }
         }
 
-    /** Fetches routes and tips for the current answer; keeps the old ones if that fails. */
+    /**
+     * Fetches routes and tips for the current answer; keeps the old ones if that fails. Routes need both DIDOK
+     * numbers: `/routes` treats a missing one as «any», which would list routes for other stations.
+     */
     fun refreshCommunity() {
         val ready = _ui.value as? OptionsUi.Ready ?: return
+        val from = ready.query.from.didok
+        val to = ready.query.to.didok
         scope.launch {
-            val routes = attempt { api.routes(ready.query.from.didok, ready.query.to.didok) }.getOrNull()
+            val routes =
+                if (from == null || to == null) emptyList() else attempt { api.routes(from, to) }.getOrNull()
             val trips = listOfNotNull(ready.view.usual, ready.view.pick?.trip)
             val tips = attempt { api.tips(stations = trips.stations()) }.getOrNull()
             _ui.update { s ->
