@@ -23,6 +23,12 @@ class StopRefsTest {
     }
 
     @Test
+    fun borderStationsKeepTheirForeignNumber() {
+        assertEquals(8301003, didokOf("8301003"))
+        assertEquals(8700010, didokOf("8700010"))
+    }
+
+    @Test
     fun nonSwissOrBrokenRefsGiveNull() {
         assertNull(didokOf("de:00000:-1"))
         assertNull(didokOf("ch:1:sloid:"))

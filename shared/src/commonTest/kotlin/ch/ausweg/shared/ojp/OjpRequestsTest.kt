@@ -53,4 +53,24 @@ class OjpRequestsTest {
         assertEquals("stop", request.textAt("Restrictions", "Type"))
         assertEquals("10", request.textAt("Restrictions", "NumberOfResults"))
     }
+
+    @Test
+    fun stopEventRequestAsksForDeparturesInALanguage() {
+        val xml = OjpRequests.stopEvent("8507000", departAt, now, "ausweg_test", language = "fr")
+        assertTrue(xml.startsWith("<?xml"), "XML declaration must come first")
+
+        val request = XmlNode.parse(xml).at("OJPRequest", "ServiceRequest")!!
+        assertEquals("fr", request.textAt("ServiceRequestContext", "Language"))
+        val stopEvent = request.child("OJPStopEventRequest")!!
+        assertEquals("8507000", stopEvent.textAt("Location", "PlaceRef", "StopPointRef"))
+        assertEquals(departAt.toString(), stopEvent.textAt("Location", "DepArrTime"))
+        assertEquals("60", stopEvent.textAt("Params", "NumberOfResults"))
+        assertEquals("departure", stopEvent.textAt("Params", "StopEventType"))
+    }
+
+    @Test
+    fun requestsWithoutLanguageHaveNoContext() {
+        val xml = OjpRequests.stopEvent("8507000", departAt, now, "ausweg_test")
+        assertEquals(null, XmlNode.parse(xml).at("OJPRequest", "ServiceRequest", "ServiceRequestContext"))
+    }
 }
