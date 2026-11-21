@@ -15,6 +15,9 @@ private const val DEFAULT_PORT = 8080
  * @property ojpKey the first of: env `OJP_API_TOKEN`, env `OJP_API_KEY`, `OJP_API_TOKEN` in `.env`, `ojp.apiKey` in
  *   `local.properties` (both files gitignored). Null means no OJP (fixtures only).
  * @property recordOjp `OJP_RECORD=1`: save every OJP trip answer into [fixturesDir].
+ * @property dbFile SQLite file for tips, routes and votes (`AUSWEG_DB`, gitignored `*.db`).
+ * @property communitySeed tips and routes loaded into an empty database.
+ * @property staffToken `STAFF_TOKEN` (env or `.env`): the `X-Staff-Token` that may endorse tips. Null: nobody can.
  */
 data class ServerConfig(
     val port: Int,
@@ -24,6 +27,9 @@ data class ServerConfig(
     val hubsFile: Path = Path.of("data/routing/hubs.json"),
     val ojpKey: OjpKey? = null,
     val recordOjp: Boolean = false,
+    val dbFile: Path = Path.of("data/ausweg.db"),
+    val communitySeed: Path = Path.of("data/seed/community.json"),
+    val staffToken: Secret? = null,
 ) {
     companion object {
         fun fromEnv(
@@ -44,9 +50,21 @@ data class ServerConfig(
                 hubsFile = dataDir.resolve("routing/hubs.json"),
                 ojpKey = key?.let(::OjpKey),
                 recordOjp = env["OJP_RECORD"] == "1",
+                dbFile = env["AUSWEG_DB"]?.let(Path::of) ?: dataDir.resolve("ausweg.db"),
+                communitySeed = dataDir.resolve("seed/community.json"),
+                staffToken =
+                    (env["STAFF_TOKEN"]?.takeIf(String::isNotBlank) ?: readProperty(dotEnv, "STAFF_TOKEN"))
+                        ?.let(::Secret),
             )
         }
     }
+}
+
+/** A secret setting. Its [toString] hides the value so it can't end up in a log line by accident. */
+class Secret(
+    val value: String,
+) {
+    override fun toString() = "Secret(***)"
 }
 
 /**
