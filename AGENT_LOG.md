@@ -25,4 +25,5 @@ Outcome: `pending` → set by the human reviewer to `accepted` / `changed: why` 
 | 2026-11-21 18:41 | claude/server | Community tips, routes, votes (SQLite) + ranking | accepted |
 | 2026-11-21 18:49 | claude/server | Review #7: closing kinds only, rerouted needs new trips | accepted |
 | 2026-11-21 19:37 | claude/server | #8 into main, scenario stop names, AGENTS.md table | accepted |
-| 2026-11-21 20:25 | claude/shared | Richer OJP situation parsing + stop-event request | accepted |
+| 2026-11-21 20:25 | claude/shared | Richer OJP situation parsing + stop-event request | pending |
+| 2026-11-21 21:41 | claude/shared | Review #12: own log row back to pending | pending |
