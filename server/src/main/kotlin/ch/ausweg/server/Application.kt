@@ -32,6 +32,9 @@ fun Application.module(backend: Backend) {
         allowMethod(HttpMethod.Post)
         allowHeader(HttpHeaders.ContentType)
         allowHeader(STAFF_TOKEN_HEADER)
+        // The SSE client sends these on /events; without them the browser's preflight is refused.
+        allowHeader(HttpHeaders.CacheControl)
+        allowHeader("Last-Event-ID")
         allowNonSimpleContentTypes = true
     }
     routing {
