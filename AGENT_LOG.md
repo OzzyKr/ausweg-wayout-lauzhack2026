@@ -25,10 +25,14 @@ Outcome: `pending` → set by the human reviewer to `accepted` / `changed: why` 
 | 2026-11-21 18:41 | claude/server | Community tips, routes, votes (SQLite) + ranking | accepted |
 | 2026-11-21 18:49 | claude/server | Review #7: closing kinds only, rerouted needs new trips | accepted |
 | 2026-11-21 19:37 | claude/server | #8 into main, scenario stop names, AGENTS.md table | accepted |
-| 2026-11-21 20:25 | claude/shared | Richer OJP situation parsing + stop-event request | pending |
-| 2026-11-21 20:35 | claude/shared | OJP situation → Disruption with keyword rules + tests | pending |
-| 2026-11-21 21:05 | claude/server | Live /plan: OJP situations become disruptions | pending |
-| 2026-11-21 21:41 | claude/shared | Review #12: own log row back to pending | pending |
-| 2026-11-21 21:42 | claude/shared | Review #13: shorter station name inside longer one | pending |
-| 2026-11-21 21:43 | claude/shared | Review #14: express through closure warns, not dropped | pending |
-| 2026-11-21 22:23 | claude/shared | Fixed #15 review: live hints, via stops, merged answers | pending |
+| 2026-11-21 19:51 | claude/shared | App state: API client, SSE, i18n, screen state + tests | accepted |
+| 2026-11-21 20:25 | claude/shared | Richer OJP situation parsing + stop-event request | accepted |
+| 2026-11-21 20:35 | claude/shared | OJP situation → Disruption with keyword rules + tests | accepted |
+| 2026-11-21 21:05 | claude/server | Live /plan: OJP situations become disruptions | accepted |
+| 2026-11-21 21:41 | claude/shared | Review #12: own log row back to pending | accepted |
+| 2026-11-21 21:42 | claude/shared | Review #13: shorter station name inside longer one | accepted |
+| 2026-11-21 21:43 | claude/shared | Fix #10 review: departed picks, share, routes, banners | accepted |
+| 2026-11-21 21:43 | claude/shared | Review #14: express through closure warns, not dropped | accepted |
+| 2026-11-21 21:51 | claude/shared | Live trip uses plan disruptions; unique banner ids | accepted |
+| 2026-11-21 22:04 | claude/shared | Plan-disruption fallback only in live mode (review) | accepted |
+| 2026-11-21 22:23 | claude/shared | Fixed #15 review: live hints, via stops, merged answers | accepted |

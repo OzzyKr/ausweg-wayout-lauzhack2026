@@ -1,1 +1,55 @@
-{}
+{
+  "time.duration_hm": "{h} h {min}",
+  "time.duration_m": "{min} min",
+  "time.date": "{day} {month} {year}",
+  "time.just_now": "just now",
+  "time.ago_min": "{n} min ago",
+  "time.ago_h": "{n} h ago",
+  "time.until_approx": "until approx. {time}",
+  "time.until_at_least": "at least until {time}",
+  "time.until": "until {time}",
+  "time.end_unknown": "end unknown",
+  "time.month.1": "Jan",
+  "time.month.2": "Feb",
+  "time.month.3": "Mar",
+  "time.month.4": "Apr",
+  "time.month.5": "May",
+  "time.month.6": "Jun",
+  "time.month.7": "Jul",
+  "time.month.8": "Aug",
+  "time.month.9": "Sep",
+  "time.month.10": "Oct",
+  "time.month.11": "Nov",
+  "time.month.12": "Dec",
+
+  "advice.not_affected": "Your usual connection runs normally.",
+  "advice.wait_is_faster": "Waiting for the line to reopen gets you there sooner than a detour.",
+  "advice.detour_is_faster": "Goes round the closed section and arrives before the line reopens.",
+  "advice.bus_available": "No train gets through. Replacement buses are running.",
+  "advice.open_ended": "Nobody knows yet when the line reopens, so this goes round it.",
+  "advice.no_alternative": "There's no way round right now. Wait here for updates.",
+
+  "community.match.same_disruption": "Shared during this disruption",
+  "community.match.similar_disruption": "From a similar disruption on {date}",
+  "community.match.permanent": "Always useful",
+
+  "timeline.source.via": "SBB system",
+  "timeline.source.internal": "SBB internal",
+  "timeline.source.public": "Public",
+
+  "update.blocked": "Your route is now affected: {title}.",
+  "update.advice_changed": "New advice for your trip: {title}.",
+  "update.resolved": "Your route is clear again: {title}.",
+  "update.bus_running": "Replacement buses are now running ({title}). Your route is still faster, keep going.",
+  "update.line_reopened": "Trains run again on the line you avoided ({title}). Your route still works.",
+  "update.end_changed": "The line you avoided now reopens {until}. Keep going.",
+
+  "options.error.no_connections": "No connections found for this trip.",
+  "options.error.no_data": "Timetable data isn't available right now. Try again in a moment.",
+  "options.error.network": "Can't reach the server. Check your connection.",
+
+  "tab.plan": "Plan",
+  "tab.trips": "Trips",
+  "tab.community": "Community",
+  "tab.alerts": "Alerts"
+}
