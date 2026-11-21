@@ -71,7 +71,9 @@ Bonus : à 20:38, quelqu'un en gare écrit au TCC « écrivez si c'est le chaos 
 ## Format d'un scénario (`scenarios/*.events.json`)
 C'est le contrat avec le backend (C) et le code partagé (A) : tout changement se discute avec le lead. `validate.py` vérifie ce format.
 
-**`incident`** : `id` (id VIA), `kultId`, `title`, `line`, `lineStations` (gares de la ligne dans l'ordre), `lines` (IC1, R8…), `replayStart`, `replayEnd`.
+**`incident`** : `id` (id VIA), `kultId`, `title`, `line`, `lineStations` (toutes les gares de la ligne, dans l'ordre), `otherStations` (optionnel : gares hors de la ligne citées dans les événements, ex. un embranchement), `lines` (IC1, R8…), `replayStart`, `replayEnd`.
+
+**Noms de gares** : toujours le nom officiel SBB, identique à OJP (vérifié avec `https://transport.opendata.ch/v1/locations?query=…`, mêmes numéros que les colonnes VIA `stoerungs_ort*`), ex. `Romont FR`, `Fribourg/Freiburg`. `lineStations` vient de la liste d'arrêts d'un train omnibus (Puidoux : S41 ; Renens : R9 + RE33 + RL2). Dans `section`, `bus` et `bus.routes`, chaque gare doit être dans `lineStations` ou `otherStations` (`validate.py` le vérifie). Les `summary` peuvent utiliser les noms courts.
 
 **`events[]`**, triés par `t` :
 | Champ | Obligatoire | Valeurs |
@@ -89,7 +91,7 @@ C'est le contrat avec le backend (C) et le code partagé (A) : tout changement s
 | `firstTrains` | non | `{"<départ> -> <arrivée>": ["<n° de train>", …]}` |
 | `noAlternative` | non | `true` si le texte dit qu'il n'y a aucune alternative |
 
-Points ouverts (à voir avec le lead) : un événement ne porte qu'une `section` (Puidoux touche aussi Puidoux – Lucens) ; `lineStations` ne contient que les gares citées dans les données, pas les noms officiels (ex. « Puidoux » et non « Puidoux-Chexbres »).
+Point ouvert (à voir avec le lead) : un événement ne porte qu'une `section` (Puidoux touche aussi Puidoux – Lucens).
 
 ## Esquisse Kotlin (`commonMain`)
 ```kotlin

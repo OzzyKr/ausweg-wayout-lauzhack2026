@@ -4,7 +4,8 @@
     "kultId": 24605,
     "title": "Interruption Renens VD - Morges et Bussigny (panne d'alimentation électrique)",
     "line": "Lausanne - Genève",
-    "lineStations": ["Lausanne", "Renens VD", "Morges", "St-Prex", "Allaman", "Rolle", "Gland", "Nyon", "Coppet", "Genève", "Genève-Aéroport"],
+    "lineStations": ["Lausanne", "Renens VD", "Lonay-Préverenges", "Morges-St-Jean", "Morges", "St-Prex", "Etoy", "Allaman", "Rolle", "Gland", "Nyon", "Coppet", "Tannay", "Mies", "Pont-Céard", "Versoix", "Creux-de-Genthod", "Genthod-Bellevue", "Les Tuileries", "Chambésy", "Genève-Sécheron", "Genève", "Genève-Aéroport"],
+    "otherStations": ["Bussigny"],
     "lines": ["TGV", "EC", "IC1", "IR15", "IR57", "IR90", "IR95", "RE33", "R1", "R2", "R3", "R4", "R8", "R9"],
     "replayStart": "2026-09-17T17:20:00+02:00",
     "replayEnd": "2026-09-18T00:05:00+02:00"

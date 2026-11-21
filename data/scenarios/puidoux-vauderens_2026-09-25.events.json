@@ -3,8 +3,9 @@
     "id": "2195005195853",
     "kultId": 24666,
     "title": "Interruption Puidoux - Vauderens et Lucens (incendie)",
-    "line": "Lausanne - Fribourg",
-    "lineStations": ["Lausanne", "Puidoux", "Palézieux", "Vauderens", "Romont", "Fribourg"],
+    "line": "Lausanne - Fribourg/Freiburg",
+    "lineStations": ["Lausanne", "Pully-Nord", "La Conversion", "Bossière", "Grandvaux", "Puidoux", "Moreillon", "Palézieux", "Oron", "Vauderens", "Romont FR", "Villaz-St-Pierre", "Chénens", "Cottens FR", "Neyruz FR", "Avry-Matran", "Villars-sur-Glâne", "Fribourg/Freiburg"],
+    "otherStations": ["Moudon", "Lucens"],
     "lines": ["IC1", "IR15", "R8", "R9", "S40", "S41"],
     "replayStart": "2026-09-25T16:00:00+02:00",
     "replayEnd": "2026-09-25T18:30:00+02:00"
@@ -63,7 +64,7 @@
           { "from": "Palézieux", "to": "Lausanne" },
           { "from": "Palézieux", "to": "Puidoux" },
           { "from": "Palézieux", "to": "Vauderens" },
-          { "from": "Palézieux", "to": "Romont" }
+          { "from": "Palézieux", "to": "Romont FR" }
         ]
       },
       "summary": "4 bus de 150 places au départ de Palézieux (vers Lausanne, Puidoux, Vauderens, Romont), en gare à 17:15.",
@@ -131,9 +132,9 @@
     {
       "t": "2026-09-25T18:09:00+02:00", "source": "INTERNAL", "kind": "RESTORATION",
       "firstTrains": {
-        "Romont -> Genève-Aéroport": ["2530"],
+        "Romont FR -> Genève-Aéroport": ["2530"],
         "Lausanne -> St. Gallen": ["733"],
-        "Fribourg -> Genève-Aéroport": ["728"]
+        "Fribourg/Freiburg -> Genève-Aéroport": ["728"]
       },
       "summary": "Premiers trains grandes lignes proposés : 2530 Romont - Genève-Aéroport, 733 Lausanne - St-Gall, 728 Fribourg - Genève-Aéroport.",
       "raw": "Proposition pour les premiers trains FV: 2530 ROM - GEAP 733 LS - SG 728 FRI - GEAP"

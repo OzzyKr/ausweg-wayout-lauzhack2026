@@ -19,6 +19,7 @@ KINDS = {"DETECTED", "CAUSE", "INTERRUPTION", "RESTRICTION", "SCOPE_CHANGE", "PR
 END_TYPES = {"APPROX", "AT_LEAST", "UNKNOWN"}
 CONFIDENCE = {"LOW", "MEDIUM", "HIGH"}
 INCIDENT_KEYS = {"id", "kultId", "title", "line", "lineStations", "lines", "replayStart", "replayEnd"}
+OPTIONAL_INCIDENT_KEYS = {"otherStations"}
 EVENT_KEYS = {"t", "source", "kind", "section", "expectedEnd", "confidence", "bus", "firstTrains", "noAlternative",
               "cause", "summary", "raw"}
 BUS_KEYS = {"status", "from", "to", "eta", "capacityPerBus", "count", "direct", "routes"}
@@ -37,9 +38,13 @@ def ts(value, where, errors):
     return d
 
 
-def section_ok(sec, where, errors):
+def section_ok(sec, where, errors, stations):
     if not isinstance(sec, dict) or not sec.get("from") or not sec.get("to"):
         errors.append(f"{where}: section doit avoir from et to")
+        return
+    for end in (sec["from"], sec["to"]):
+        if end not in stations:
+            errors.append(f"{where}: gare {end!r} absente de lineStations / otherStations")
 
 
 def check(path):
@@ -48,8 +53,9 @@ def check(path):
     inc = data.get("incident", {})
     for k in INCIDENT_KEYS - inc.keys():
         errors.append(f"incident: clé manquante {k}")
-    for k in inc.keys() - INCIDENT_KEYS:
+    for k in inc.keys() - INCIDENT_KEYS - OPTIONAL_INCIDENT_KEYS:
         errors.append(f"incident: clé inconnue {k}")
+    stations = set(inc.get("lineStations", [])) | set(inc.get("otherStations", []))
     start = ts(inc.get("replayStart"), "incident.replayStart", errors)
     end = ts(inc.get("replayEnd"), "incident.replayEnd", errors)
 
@@ -72,7 +78,7 @@ def check(path):
             if not str(e.get(k, "")).strip():
                 errors.append(f"{w}: {k} vide")
         if "section" in e:
-            section_ok(e["section"], w, errors)
+            section_ok(e["section"], w, errors, stations)
         if "expectedEnd" in e:
             ee = e["expectedEnd"]
             if ee.get("type") not in END_TYPES:
@@ -87,10 +93,13 @@ def check(path):
             bus = e["bus"]
             for k in bus.keys() - BUS_KEYS:
                 errors.append(f"{w}: bus.{k} inconnu")
+            for side in ("from", "to"):
+                if bus.get(side) and bus[side] not in stations:
+                    errors.append(f"{w}: bus.{side} {bus[side]!r} absente de lineStations / otherStations")
             if bus.get("eta") is not None:
                 ts(bus["eta"], f"{w} bus.eta", errors)
             for j, r in enumerate(bus.get("routes", [])):
-                section_ok(r, f"{w} bus.routes[{j}]", errors)
+                section_ok(r, f"{w} bus.routes[{j}]", errors, stations)
     return errors
 
 
