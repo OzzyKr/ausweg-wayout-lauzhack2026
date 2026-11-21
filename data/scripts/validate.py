@@ -20,7 +20,7 @@ END_TYPES = {"APPROX", "AT_LEAST", "UNKNOWN"}
 CONFIDENCE = {"LOW", "MEDIUM", "HIGH"}
 INCIDENT_KEYS = {"id", "kultId", "title", "line", "lineStations", "stationIds", "lines", "replayStart", "replayEnd"}
 OPTIONAL_INCIDENT_KEYS = {"otherStations"}
-EVENT_KEYS = {"t", "source", "kind", "section", "expectedEnd", "confidence", "bus", "firstTrains", "noAlternative",
+EVENT_KEYS = {"t", "source", "kind", "sections", "expectedEnd", "confidence", "bus", "firstTrains", "noAlternative",
               "cause", "summary", "raw"}
 BUS_KEYS = {"status", "from", "to", "eta", "capacityPerBus", "count", "direct", "routes"}
 
@@ -86,7 +86,13 @@ def check(path):
             if not str(e.get(k, "")).strip():
                 errors.append(f"{w}: {k} vide")
         if "section" in e:
-            section_ok(e["section"], w, errors, stations)
+            errors.append(f"{w}: « section » remplacé par « sections » (liste)")
+        if "sections" in e:
+            if not isinstance(e["sections"], list) or not e["sections"]:
+                errors.append(f"{w}: sections doit être une liste non vide")
+            else:
+                for j, sec in enumerate(e["sections"]):
+                    section_ok(sec, f"{w} sections[{j}]", errors, stations)
         if "expectedEnd" in e:
             ee = e["expectedEnd"]
             if ee.get("type") not in END_TYPES:

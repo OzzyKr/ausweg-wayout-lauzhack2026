@@ -24,7 +24,7 @@
     },
     {
       "t": "2026-09-25T16:19:00+02:00", "source": "INTERNAL", "kind": "INTERRUPTION",
-      "section": { "from": "Puidoux", "to": "Vauderens" },
+      "sections": [{ "from": "Puidoux", "to": "Vauderens" }],
       "summary": "Les trains font demi-tour à Romont, Palézieux, Vauderens et Puidoux.",
       "raw": "722 rebrousse à Romontsur 727, circule Romont - St. Gallen comme 70727. / 24852 rebrousse à Palézieux sur 24961, circule Palézieux-Morat comme 94961. / 24652 rebrousse à Vauderens sur 24561, circule Vauderens - Fribourg comme 94561. / 24961 rebrousse à Puidoux I sur 24852, circule Puidoux - Allaman comme 94852."
     },
@@ -35,7 +35,7 @@
     },
     {
       "t": "2026-09-25T16:27:22+02:00", "source": "PUBLIC", "kind": "INTERRUPTION",
-      "section": { "from": "Puidoux", "to": "Vauderens" },
+      "sections": [{ "from": "Puidoux", "to": "Vauderens" }, { "from": "Puidoux", "to": "Lucens" }],
       "expectedEnd": { "time": "2026-09-25T18:00:00+02:00", "type": "APPROX" },
       "summary": "Trafic interrompu entre Puidoux et Vauderens et entre Puidoux et Lucens (incendie), jusqu'à 18:00 environ.",
       "raw": "Interruption Puidoux - Vauderens et Lucens | UNTIL_APPROX_DATE_TIME 2026-09-25 18:00:00.000 +0200 | Le trafic ferroviaire est interrompu sur la ligne Lausanne - Fribourg/Freiburg entre Puidoux et Vauderens, ainsi que sur la ligne Lausanne - Payerne entre Puidoux et Lucens. Un incendie en est la cause. La restriction dure jusqu'à 18:00 environ. Les lignes IC1, IR15, R8, R9, S40 et S41 sont concernées."
@@ -96,7 +96,7 @@
     },
     {
       "t": "2026-09-25T17:11:50+02:00", "source": "PUBLIC", "kind": "INFO",
-      "section": { "from": "Puidoux", "to": "Lucens" },
+      "sections": [{ "from": "Puidoux", "to": "Lucens" }],
       "summary": "Correction : l'interruption sur la ligne de Payerne va jusqu'à Lucens (et non Moudon).",
       "raw": "Interruption du traficférroviaire: Un incendie s’est déclaré sur un transformateur en gare de Palézieux. L’alimentation électrique de la caténaire a été interrompue, ce qui entraîne la suspension des circulations entre Puidoux et Vauderens ainsi qu’entre Puidoux et Lucens. Nous mettons tout en œuvre pour organiser des bus de remplacement et vous tiendrons informés dès que possible des retards et des solutions de transport. Merci de votre compréhension."
     },
@@ -120,7 +120,7 @@
     },
     {
       "t": "2026-09-25T17:56:00+02:00", "source": "INTERNAL", "kind": "RESTORATION",
-      "section": { "from": "Puidoux", "to": "Vauderens" },
+      "sections": [{ "from": "Puidoux", "to": "Vauderens" }, { "from": "Palézieux", "to": "Moudon" }],
       "summary": "Courant rétabli entre Puidoux et Vauderens et entre Palézieux et Moudon.",
       "raw": "Tension rétablie PUI - VD + PAL - MD"
     },
@@ -152,6 +152,7 @@
     },
     {
       "t": "2026-09-25T18:15:07+02:00", "source": "PUBLIC", "kind": "ENDED",
+      "sections": [{ "from": "Puidoux", "to": "Vauderens" }, { "from": "Puidoux", "to": "Lucens" }],
       "summary": "Trafic rétabli entre Puidoux et Vauderens et entre Puidoux et Lucens. Quelques retards et suppressions restent possibles.",
       "raw": "[ENDED] Trafic rétabli: Puidoux - Vauderens et Lucens | Le trafic ferroviaire est rétabli sur la ligne Lausanne - Fribourg/Freiburg entre Puidoux et Vauderens, ainsi que sur la ligne Lausanne - Payerne entre Puidoux et Lucens. Quelques retards et suppressions restent possibles."
     },

@@ -16,3 +16,4 @@ Outcome: `pending` → set by the human reviewer to `accepted` / `changed: why` 
 | 2026-11-21 15:53 | claude/server | Official station names + station check in validate.py | pending |
 | 2026-11-21 16:45 | claude/server | DIDOK station numbers in scenarios (stationIds) | pending |
 | 2026-11-21 16:46 | claude/server | pitch_stats.py: pitch numbers recomputed from VIA | pending |
+| 2026-11-21 17:00 | claude/server | Review #4: merge main, sections list, advise sketch, log outcomes | pending |

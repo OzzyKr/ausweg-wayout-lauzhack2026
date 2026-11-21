@@ -74,7 +74,7 @@ C'est le contrat avec le backend (C) et le code partagé (A) : tout changement s
 
 **`incident`** : `id` (id VIA), `kultId`, `title`, `line`, `lineStations` (toutes les gares de la ligne, dans l'ordre), `otherStations` (optionnel : gares hors de la ligne citées dans les événements, ex. un embranchement), `stationIds` (numéro DIDOK de chaque gare de `lineStations` et `otherStations`, ex. `"Morges": 8501037` : c'est le même numéro que `StopRef.didok` côté OJP et que les colonnes VIA `stoerungs_ort*`, donc **le croisement trajet × perturbation se fait sur ce numéro**, pas sur le nom), `lines` (IC1, R8…), `replayStart`, `replayEnd`.
 
-**Noms de gares** : toujours le nom officiel SBB, identique à OJP (vérifié avec `https://transport.opendata.ch/v1/locations?query=…`, mêmes numéros que les colonnes VIA `stoerungs_ort*`), ex. `Romont FR`, `Fribourg/Freiburg`. `lineStations` vient de la liste d'arrêts d'un train omnibus (Puidoux : S41 ; Renens : R9 + RE33 + RL2). Dans `section`, `bus` et `bus.routes`, chaque gare doit être dans `lineStations` ou `otherStations` (`validate.py` le vérifie). Les `summary` peuvent utiliser les noms courts.
+**Noms de gares** : toujours le nom officiel SBB, identique à OJP (vérifié avec `https://transport.opendata.ch/v1/locations?query=…`, mêmes numéros que les colonnes VIA `stoerungs_ort*`), ex. `Romont FR`, `Fribourg/Freiburg`. `lineStations` vient de la liste d'arrêts d'un train omnibus (Puidoux : S41 ; Renens : R9 + RE33 + RL2). Dans `sections`, `bus` et `bus.routes`, chaque gare doit être dans `lineStations` ou `otherStations` (`validate.py` le vérifie). Les `summary` peuvent utiliser les noms courts.
 
 **`events[]`**, triés par `t` :
 | Champ | Obligatoire | Valeurs |
@@ -84,7 +84,7 @@ C'est le contrat avec le backend (C) et le code partagé (A) : tout changement s
 | `kind` | oui | `DETECTED` \| `CAUSE` \| `INTERRUPTION` \| `RESTRICTION` \| `SCOPE_CHANGE` \| `PROGNOSIS` \| `SEVERITY_UP` \| `REPLACEMENT_BUS` \| `RESTORATION` \| `INFO` \| `ENDED` |
 | `summary` | oui | Phrase claire en français pour le voyageur |
 | `raw` | oui | Texte d'origine (ou nom de la colonne VIA), pour vérifier. Jamais envoyé à l'app |
-| `section` | non | `{from, to}` : tronçon touché |
+| `sections` | non | Liste non vide de `{from, to}` : tronçons touchés (ex. Puidoux – Vauderens **et** Puidoux – Lucens). Une seule entrée si le texte ne cite qu'un tronçon |
 | `expectedEnd` | non | `{time, type}`, `type` = `APPROX` \| `AT_LEAST` \| `UNKNOWN` ; `time` = `null` seulement si `UNKNOWN` |
 | `confidence` | non | `LOW` \| `MEDIUM` \| `HIGH` (seulement si le texte le dit : « provisoire », « au minimum »…) |
 | `cause` | non | Cause en clair (événements `CAUSE`) |
@@ -92,27 +92,31 @@ C'est le contrat avec le backend (C) et le code partagé (A) : tout changement s
 | `firstTrains` | non | `{"<départ> -> <arrivée>": ["<n° de train>", …]}` |
 | `noAlternative` | non | `true` si le texte dit qu'il n'y a aucune alternative |
 
-Point ouvert (à voir avec le lead) : un événement ne porte qu'une `section` (Puidoux touche aussi Puidoux – Lucens).
-
 ## Esquisse Kotlin (`commonMain`)
+Indicatif : le modèle et `advise()` appartiennent au lead (A).
 ```kotlin
 @Serializable data class Section(val from: String, val to: String)
 @Serializable data class ExpectedEnd(val time: Instant? = null, val type: EndType)
 enum class EndType { APPROX, AT_LEAST, UNKNOWN }
 @Serializable data class Event(
     val t: Instant, val source: Source, val kind: Kind,
-    val section: Section? = null, val expectedEnd: ExpectedEnd? = null,
+    val sections: List<Section> = emptyList(), val expectedEnd: ExpectedEnd? = null,
     val confidence: Confidence? = null, val bus: Bus? = null,
-    val summary: String, val raw: String,
+    val summary: String,            // pas de `raw` : le serveur le retire avant d'envoyer à l'app
 )
 
-// Le cœur : (trajet, événements connus à l'instant t) -> recommandation
+// Le cœur : (trajet, événements connus à l'instant t) -> recommandation.
+// Pas de texte ici : l'UI construit la phrase depuis les clés i18n (AGENTS.md : pas de texte en dur).
 fun advise(trip: Trip, known: List<Event>, now: Instant): Advice
 data class Advice(
     val action: Action,             // WAIT, TAKE_BUS, REROUTE, POSTPONE, GO_AS_PLANNED
-    val headline: String,           // « Prenez le bus Palézieux → Romont, départ 17:15 »
-    val why: String,
+    val params: AdviceParams,       // ex. TAKE_BUS -> bus Palézieux → Romont FR, eta 17:15
     val confidence: Confidence,
     val changedSinceLast: Boolean,  // -> notifier seulement si true
+)
+data class AdviceParams(
+    val bus: Bus? = null,           // from, to, eta
+    val sections: List<Section> = emptyList(),
+    val expectedEnd: ExpectedEnd? = null,
 )
 ```

@@ -14,7 +14,7 @@
   "events": [
     {
       "t": "2026-09-17T17:22:29+02:00", "source": "VIA", "kind": "DETECTED",
-      "section": { "from": "Allaman", "to": "Morges" },
+      "sections": [{ "from": "Allaman", "to": "Morges" }],
       "summary": "Incident créé dans VIA : panne de courant entre Allaman et Morges.",
       "raw": "alea_erstellungszeitpunkt | alea_ort_strecke=ALL-MOR | alea_ereignisgrund=Spannungsausfall momentan"
     },
@@ -31,14 +31,14 @@
     },
     {
       "t": "2026-09-17T17:43:55+02:00", "source": "PUBLIC", "kind": "INTERRUPTION",
-      "section": { "from": "Renens VD", "to": "Morges" },
+      "sections": [{ "from": "Renens VD", "to": "Morges" }],
       "expectedEnd": { "time": "2026-09-17T18:30:00+02:00", "type": "APPROX" },
       "summary": "Trafic interrompu entre Renens VD et Morges (panne de courant), jusqu'à 18:30 environ.",
       "raw": "Interruption Renens VD - Morges | UNTIL_APPROX_DATE_TIME 2026-09-17 18:30:00.000 +0200 | Le trafic ferroviaire sur la ligne Lausanne - Genève est interrompu entre Renens VD et Morges. Une panne de l'alimentation électrique en est la cause. La restriction dure jusqu'à 18:30 environ. Les lignes IC1, IR15, IR57, IR90, IR95, RE33, R8 et R9 sont concernées. Des retards et des suppressions sont à prévoir."
     },
     {
       "t": "2026-09-17T17:44:00+02:00", "source": "INTERNAL", "kind": "PROGNOSIS",
-      "section": { "from": "Renens VD", "to": "Allaman" },
+      "sections": [{ "from": "Renens VD", "to": "Allaman" }],
       "expectedEnd": { "time": "2026-09-17T18:30:00+02:00", "type": "AT_LEAST" },
       "confidence": "LOW",
       "noAlternative": true,
@@ -63,7 +63,7 @@
     },
     {
       "t": "2026-09-17T18:19:00+02:00", "source": "INTERNAL", "kind": "PROGNOSIS",
-      "section": { "from": "Bussigny", "to": "Morges" },
+      "sections": [{ "from": "Bussigny", "to": "Morges" }],
       "expectedEnd": { "time": null, "type": "UNKNOWN" },
       "confidence": "LOW",
       "summary": "Interruption totale Bussigny - Morges - Renens VD en préparation. Reprise : pas de pronostic.",
@@ -83,7 +83,7 @@
     },
     {
       "t": "2026-09-17T18:48:00+02:00", "source": "PUBLIC", "kind": "SCOPE_CHANGE",
-      "section": { "from": "Renens VD", "to": "Bussigny" },
+      "sections": [{ "from": "Renens VD", "to": "Bussigny" }, { "from": "Renens VD", "to": "Morges" }],
       "summary": "Interruption étendue à Renens VD - Bussigny (ligne Lausanne - Yverdon-les-Bains).",
       "raw": "Interruption Renens VD - Morges et Bussigny | UNTIL_APPROX_DATE_TIME 2026-09-17 20:30:00.000 +0200 | Le trafic ferroviaire est interrompu sur la ligne Lausanne - Genève entre Renens VD et Morges, ainsi que sur la ligne Lausanne - Yverdon-les-Bains entre Renens VD et Bussigny. Une panne de l'alimentation électrique en est la cause. La restriction dure jusqu'à 20:30 environ. Les lignes TGV, EC, IC1, IR15, IR90, IR95, RE33, R1, R2, R3, R4, R8 et R9 sont concernées. Des retards et des suppressions sont à prévoir."
     },
@@ -99,7 +99,7 @@
     },
     {
       "t": "2026-09-17T19:07:00+02:00", "source": "INTERNAL", "kind": "INFO",
-      "section": { "from": "Allaman", "to": "Renens VD" },
+      "sections": [{ "from": "Allaman", "to": "Renens VD" }],
       "noAlternative": true,
       "summary": "Pour le moment, impossible de voyager entre Allaman et Renens VD.",
       "raw": "Pour le moment il n’est pas encore possible de voyager entre Allaman et Renens"
@@ -136,7 +136,7 @@
     },
     {
       "t": "2026-09-17T21:05:11+02:00", "source": "PUBLIC", "kind": "RESTRICTION",
-      "section": { "from": "Renens VD", "to": "Morges" },
+      "sections": [{ "from": "Renens VD", "to": "Morges" }, { "from": "Renens VD", "to": "Bussigny" }],
       "expectedEnd": { "time": "2026-09-17T23:59:00+02:00", "type": "APPROX" },
       "summary": "L'interruption devient une restriction, jusqu'à 23:59 environ.",
       "raw": "Restriction Renens VD - Morges et Bussigny | UNTIL_APPROX_DATE_TIME 2026-09-17 23:59:00.000 +0200 | Le trafic ferroviaire est restreint sur la ligne Lausanne - Genève entre Renens VD et Morges, ainsi que sur la ligne Lausanne - Yverdon-les-Bains entre Renens VD et Bussigny."
@@ -148,7 +148,7 @@
     },
     {
       "t": "2026-09-17T21:15:26+02:00", "source": "PUBLIC", "kind": "PROGNOSIS",
-      "section": { "from": "Allaman", "to": "Morges" },
+      "sections": [{ "from": "Allaman", "to": "Morges" }],
       "expectedEnd": { "time": "2026-09-18T00:00:00+02:00", "type": "AT_LEAST" },
       "summary": "Toujours interrompu entre Allaman et Morges, au minimum jusqu'à minuit. Bus entre Renens VD et Morges. Trafic rétabli entre Renens VD et Bussigny.",
       "raw": "Trafic interrompu Renens VD-Morges: Le trafic est toujours interrompu entre Allaman et Morges. Des bus roulent entre Renens VD et Morges. Les assistants clientèles sont là pour vous aider, n'hésitez-pas à les solliciter ! Un immense merci pour votre patience. Cependant, le trafic est rétabli entre Renens VD et Bussigny. L'interruption durera jusqu'à 00h00 minumum."
@@ -160,6 +160,7 @@
     },
     {
       "t": "2026-09-18T00:00:59+02:00", "source": "PUBLIC", "kind": "ENDED",
+      "sections": [{ "from": "Renens VD", "to": "Morges" }, { "from": "Renens VD", "to": "Bussigny" }],
       "summary": "Trafic rétabli entre Renens VD et Morges et entre Renens VD et Bussigny.",
       "raw": "[ENDED] Trafic rétabli: Renens VD - Morges et Bussigny | Le trafic ferroviaire est rétabli sur la ligne Lausanne - Genève entre Renens VD et Morges, ainsi que sur la ligne Lausanne - Yverdon-les-Bains entre Renens VD et Bussigny."
     }
