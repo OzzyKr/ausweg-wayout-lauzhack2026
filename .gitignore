@@ -30,3 +30,9 @@ data/raw/
 # Local databases
 *.db
 *.sqlite
+data/**/*.csv
+data/**/*.xlsx
+data/*.pdf
+
+# Python
+__pycache__/
