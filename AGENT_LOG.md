@@ -25,3 +25,4 @@ Outcome: `pending` → set by the human reviewer to `accepted` / `changed: why` 
 | 2026-11-21 18:30 | claude/server | Scenario ingest, timeline, OJP /plan + /stops, rerouting | accepted |
 | 2026-11-21 18:49 | claude/server | Review #7: closing kinds only, rerouted needs new trips | accepted |
 | 2026-11-21 20:25 | claude/shared | Richer OJP situation parsing + stop-event request | pending |
+| 2026-11-21 20:35 | claude/shared | OJP situation → Disruption with keyword rules + tests | pending |
