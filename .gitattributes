@@ -1,0 +1,7 @@
+* text=auto eol=lf
+*.bat text eol=crlf
+*.jar binary
+*.pdf binary
+
+# Parallel branches all append to the log; on local merges/rebases keep both sides' rows.
+AGENT_LOG.md merge=union
