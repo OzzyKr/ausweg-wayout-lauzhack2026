@@ -9,6 +9,9 @@ plugins {
 }
 
 kotlin {
+    // kotlin.time.Instant (backend clock, trip times) is still experimental in Kotlin 2.2.
+    compilerOptions { optIn.add("kotlin.time.ExperimentalTime") }
+
     androidTarget {
         compilerOptions { jvmTarget.set(JvmTarget.JVM_11) }
     }
@@ -37,6 +40,15 @@ kotlin {
     }
 }
 
+// Generated resource accessors (Res.drawable.*, Res.font.*) live in this package.
+compose.resources {
+    packageOfResClass = "ch.ausweg.app.resources"
+}
+
+// Backend the Android app talks to: `-Pausweg.apiUrl=http://192.168.1.20:8080` (or in gradle.properties /
+// local gradle.properties) for a phone on the same Wi-Fi. Default: the host machine as seen from the emulator.
+val apiUrl: String = providers.gradleProperty("ausweg.apiUrl").getOrElse("http://10.0.2.2:8080")
+
 android {
     namespace = "ch.ausweg.app"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
@@ -46,7 +58,9 @@ android {
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
         versionName = "0.1.0"
+        buildConfigField("String", "API_URL", "\"$apiUrl\"")
     }
+    buildFeatures { buildConfig = true }
     packaging {
         resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" }
     }

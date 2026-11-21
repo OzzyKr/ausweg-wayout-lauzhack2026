@@ -31,7 +31,10 @@ data class StripLeg(
     val direction: String? = null,
     val delayMinutes: Int = 0,
     val cancelled: Boolean = false,
-)
+) {
+    /** Riding time, if both times are known (the strip draws longer rides wider). */
+    val minutes: Int? get() = minutesBetween(departure, arrival)
+}
 
 /**
  * A change between ride [afterLeg] and the next one, where notes are pinned.

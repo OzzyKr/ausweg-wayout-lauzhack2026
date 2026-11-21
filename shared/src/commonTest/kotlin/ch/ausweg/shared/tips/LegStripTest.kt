@@ -77,6 +77,7 @@ class LegStripTest {
         assertEquals("3", change.departurePlatform)
         assertEquals(6, change.minutes)
         assertEquals(2, strip.legs[1].delayMinutes)
+        assertEquals(22, strip.legs[0].minutes)
         assertEquals(t("15:52"), strip.arrival)
     }
 

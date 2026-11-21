@@ -42,6 +42,9 @@ object SwissTime {
         return "${t.hour.pad()}:${t.minute.pad()}"
     }
 
+    /** Hour and minute in Zurich (to start the «Leave at» picker). */
+    fun hourMinute(instant: Instant): Pair<Int, Int> = local(instant).let { it.hour to it.minute }
+
     /**
      * The instant at [hour]:[minute] Zurich time on the Zurich day of [day] (the «Leave at» picker; [day] is the
      * backend clock, so in replay it's the replayed date).
