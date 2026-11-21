@@ -222,7 +222,7 @@ class LiveSituationsTest {
     }
 
     @Test
-    fun aClosureElsewhereOnTheTrainsRouteIsDropped() {
+    fun aClosureElsewhereOnTheTrainsRouteOnlyWarns() {
         // IC Interlaken Ost → Bern → Olten is listed under the Interlaken closure; the user rides Bern → Olten.
         val s =
             Situation(
@@ -230,7 +230,21 @@ class LiveSituationsTest {
                 summary = "Der Bahnverkehr zwischen Interlaken Ost und Interlaken West ist unterbrochen.",
             )
         val leg = Fx.leg(8507000, 8500218, dep = "15:00", line = "IC61").copy(situationIds = listOf("sit-io"))
-        assertTrue(disruptionsFrom(listOf(s), listOf(Fx.trip("ic", "15:00", "15:30", leg)), evening).isEmpty())
+        val trip = Fx.trip("ic", "15:00", "15:30", leg)
+        val d = disruptionsFrom(listOf(s), listOf(trip), evening).single()
+        assertTrue(d.hints.isEmpty())
+        assertFalse(affects(trip, listOf(d)).isBlocked)
+        assertEquals(listOf(d.id), affects(trip, listOf(d)).warnings.map { it.id })
+    }
+
+    @Test
+    fun aTrainPassingTheClosedSectionWithoutStoppingIsWarned() {
+        // Stop-less, as in real trip answers: the IC runs through Puidoux – Vauderens without stopping there.
+        val s = Situation("sit-pv", summary = "Der Bahnverkehr zwischen Puidoux und Vauderens ist unterbrochen.")
+        val ic = Fx.leg(Fx.LAUSANNE, Fx.ROMONT, Fx.FRIBOURG, dep = "15:00").copy(situationIds = listOf("sit-pv"))
+        val trip = Fx.trip("ic", "15:00", "15:30", ic)
+        val d = disruptionsFrom(listOf(s), listOf(trip), evening).single()
+        assertEquals(listOf(d.id), affects(trip, listOf(d)).warnings.map { it.id })
     }
 
     @Test

@@ -70,7 +70,8 @@ historical mode, the replayed time). The OJP key stays on the server.
    `departAt`, and is added to `disruptions` before matching:
    - the section comes from the text («zwischen X und Y», «entre X et Y», «tra X e Y»), found among the situation's
      stops; trip answers list affected train runs instead of stops, so the stops of the legs referring to it are used,
-     and a situation whose section isn't on those legs is dropped (the closure is elsewhere on that train's route);
+     and a situation whose section isn't on those legs is only a warning on them, never blocking (the closure is
+     elsewhere on that train's route, or the train passes it without stopping: the stops can't tell which);
    - keyword rules set the hints: «unterbrochen / interrompu» → `LINE_CLOSED`, «Ersatzbus / bus de remplacement» →
      `REPLACEMENT_BUS`; otherwise (most often «eingeschränkt / restreint») it is a warning only;
    - outside its validity windows (e.g. night works during the day) it is left out.

@@ -30,3 +30,4 @@ Outcome: `pending` → set by the human reviewer to `accepted` / `changed: why` 
 | 2026-11-21 21:05 | claude/server | Live /plan: OJP situations become disruptions | pending |
 | 2026-11-21 21:41 | claude/shared | Review #12: own log row back to pending | pending |
 | 2026-11-21 21:42 | claude/shared | Review #13: shorter station name inside longer one | pending |
+| 2026-11-21 21:43 | claude/shared | Review #14: express through closure warns, not dropped | pending |

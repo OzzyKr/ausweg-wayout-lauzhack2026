@@ -99,9 +99,11 @@ private fun busFor(
  * The disruptions behind the [situations] of an OJP trip answer, as they stand at [at] (the departure time asked).
  *
  * In trip answers, OJP lists the affected train runs, not stops: a situation without stops gets the stops of the
- * [trips]' legs that reference it (`Leg.situationIds`), in order, and is kept only if its «zwischen X und Y» section
- * is among them. OJP refers whole train runs: an IC Interlaken → Bern → Olten is listed under «Interlaken Ost –
- * Interlaken West unterbrochen», but the user riding it from Bern to Olten isn't affected.
+ * [trips]' legs that reference it (`Leg.situationIds`), in order. If its «zwischen X und Y» section isn't among
+ * those stops, it is only a warning on those legs (no hints): either the closure is elsewhere on the train's route
+ * (an IC Interlaken → Bern → Olten is listed under «Interlaken Ost – Interlaken West unterbrochen», but the user
+ * riding it from Bern to Olten isn't affected), or the train passes the section without stopping (an IC
+ * Lausanne → Fribourg through Puidoux – Vauderens). The stops alone can't tell these apart.
  */
 fun disruptionsFrom(
     situations: List<Situation>,
@@ -116,7 +118,11 @@ fun disruptionsFrom(
                 .filter { situation.id in it.situationIds }
                 .flatMap { leg -> (listOf(leg.from) + leg.intermediate + leg.to).map { it.stop } }
                 .distinctBy { it.didok ?: it.ref }
-        situation.copy(stops = stops).toDisruption(at)?.takeIf { it.sections.isNotEmpty() }
+        val disruption = situation.copy(stops = stops).toDisruption(at)
+        when {
+            disruption == null || disruption.sections.isNotEmpty() -> disruption
+            else -> disruption.copy(hints = emptyList(), bus = null)
+        }
     }
 }
 
