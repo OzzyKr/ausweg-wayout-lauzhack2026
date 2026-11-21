@@ -1,0 +1,32 @@
+# Gradle / Kotlin
+.gradle/
+build/
+.kotlin/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Android
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+*.keystore
+*.jks
+
+# IDE / OS
+.idea/
+*.iml
+.fleet/
+.vscode/
+.DS_Store
+
+# Secrets (OJP API key etc.)
+.env
+*.env
+secrets.properties
+
+# SBB datasets: never committed, see data/README.md
+data/raw/
+
+# Local databases
+*.db
+*.sqlite
