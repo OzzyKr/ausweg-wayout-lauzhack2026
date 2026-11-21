@@ -56,7 +56,7 @@ class PlanService(
                     }
                 }
             trips = trips + extra.flatten()
-            rerouted = extra.isNotEmpty()
+            rerouted = extra.any { it.isNotEmpty() }
         }
         return PlanResponse(
             rankTrips(trips, now.disruptions),

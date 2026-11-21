@@ -90,6 +90,23 @@ class PlanRoutesTest {
         }
 
     @Test
+    fun `via searches that find nothing are not a reroute`() =
+        withApp(
+            transport = { xml ->
+                if (xml.contains("<Via>")) {
+                    OjpXml.response()
+                } else {
+                    OjpXml.response(OjpXml.direct("2026-11-27T15:45:00Z", "2026-11-27T16:30:00Z"))
+                }
+            },
+            replayAt = "2026-09-25T14:30:00Z",
+        ) {
+            val res = AuswegJson.decodeFromString<PlanResponse>(plan().bodyAsText())
+            assertFalse(res.rerouted)
+            assertEquals(listOf("IR15"), res.trips.map { it.legs.first().line })
+        }
+
+    @Test
     fun `no OJP and no fixture answers 503`() =
         withApp(transport = { throw OjpUnavailable("down") }) {
             assertEquals(HttpStatusCode.ServiceUnavailable, plan().status)
