@@ -8,6 +8,9 @@ plugins {
 }
 
 kotlin {
+    // kotlin.time.Instant is still experimental in Kotlin 2.2; it is what kotlinx-datetime 0.7 uses.
+    compilerOptions { optIn.add("kotlin.time.ExperimentalTime") }
+
     androidTarget {
         compilerOptions { jvmTarget.set(JvmTarget.JVM_11) }
     }
@@ -24,6 +27,7 @@ kotlin {
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
+            implementation(libs.xmlutil.core)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
