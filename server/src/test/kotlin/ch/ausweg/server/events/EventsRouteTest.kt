@@ -12,9 +12,13 @@ import ch.ausweg.shared.model.Mode
 import ch.ausweg.shared.model.StateResponse
 import io.ktor.client.plugins.sse.SSE
 import io.ktor.client.plugins.sse.sse
+import io.ktor.client.request.header
+import io.ktor.client.request.options
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.testing.testApplication
 import io.ktor.sse.ServerSentEvent
@@ -52,5 +56,22 @@ class EventsRouteTest {
             assertEquals(listOf("A", "B"), state.disruptions.map { it.id })
             val clock = AuswegJson.decodeFromString<ClockState>(checkNotNull(received[3].data))
             assertEquals(Mode.HISTORICAL, clock.mode)
+        }
+
+    @Test
+    fun `a browser may open the stream from another origin`() =
+        testApplication {
+            val backend =
+                Backend(JsonFileSource(resourcePath("events-fixture.json")), FakeWall(instant("2026-09-01T08:16:00Z")))
+            application { module(backend) }
+
+            // The Ktor SSE client in the web app sends these headers, so the browser asks first.
+            val preflight =
+                client.options("/events") {
+                    header(HttpHeaders.Origin, "http://localhost:8081")
+                    header(HttpHeaders.AccessControlRequestMethod, "GET")
+                    header(HttpHeaders.AccessControlRequestHeaders, "accept,cache-control,last-event-id")
+                }
+            assertEquals(HttpStatusCode.OK, preflight.status)
         }
 }
