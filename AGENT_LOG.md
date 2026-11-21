@@ -31,3 +31,4 @@ Outcome: `pending` → set by the human reviewer to `accepted` / `changed: why` 
 | 2026-11-21 20:25 | claude/ui | Compose screens, theme, i18n EN/FR/DE/IT, wide web layout | pending |
 | 2026-11-21 21:43 | claude/shared | Fix #10 review: departed picks, share, routes, banners | pending |
 | 2026-11-21 21:51 | claude/shared | Live trip uses plan disruptions; unique banner ids | pending |
+| 2026-11-21 21:54 | claude/ui | #11: merge #10, unique banner keys, app survives rotation | pending |

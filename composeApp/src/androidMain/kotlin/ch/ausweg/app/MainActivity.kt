@@ -12,10 +12,11 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        val settings = PrefsSettings(getSharedPreferences("ausweg", Context.MODE_PRIVATE))
+        val settings = PrefsSettings(applicationContext.getSharedPreferences("ausweg", Context.MODE_PRIVATE))
+        val app = AppHolder.get(BuildConfig.API_URL, settings)
         val locales = LocaleList.getDefault()
         val languages = (0 until locales.size()).map { locales[it].toLanguageTag() }
-        setContent { App(BuildConfig.API_URL, settings, languages) }
+        setContent { App(app, languages) }
     }
 }
 

@@ -64,7 +64,7 @@ fun TripScreen(app: AuswegApp) {
         )
         LazyColumn(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
             item { Gap(16) }
-            items(trip.updates, key = { it.kind.name + it.at + it.disruption?.version }) { u ->
+            items(trip.updates, key = { "update-" + it.id }) { u ->
                 UpdateBanner(u, { app.trip.dismiss(u) })
                 Gap()
             }

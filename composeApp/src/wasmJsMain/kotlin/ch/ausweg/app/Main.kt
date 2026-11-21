@@ -11,7 +11,8 @@ import org.w3c.dom.url.URLSearchParams
 
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
-    ComposeViewport(document.body!!) { App(apiUrl(), BrowserSettings(), browserLanguages()) }
+    val app = AppHolder.get(apiUrl(), BrowserSettings())
+    ComposeViewport(document.body!!) { App(app, browserLanguages()) }
 }
 
 /** `?api=http://host:port` wins; else the backend on port 8080 of the host that served the page. */
