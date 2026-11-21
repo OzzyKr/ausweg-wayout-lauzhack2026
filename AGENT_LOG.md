@@ -20,3 +20,4 @@ Outcome: `pending` → set by the human reviewer to `accepted` / `changed: why` 
 | 2026-11-21 16:53 | claude/shared | OJP fixtures: official station names and DIDOK numbers | accepted |
 | 2026-11-21 17:00 | claude/server | Review #4: merge main, sections list, advise sketch, log outcomes | changed: fit server contract |
 
+| 2026-11-21 17:31 | claude/shared | Advice contract, Disruption sections/bus, affects/advise stubs | pending |
