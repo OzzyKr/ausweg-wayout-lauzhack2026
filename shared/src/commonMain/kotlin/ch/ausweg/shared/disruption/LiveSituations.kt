@@ -9,43 +9,12 @@ import ch.ausweg.shared.model.EndType
 import ch.ausweg.shared.model.ReplacementBus
 import ch.ausweg.shared.model.Section
 import ch.ausweg.shared.model.Situation
-import ch.ausweg.shared.model.StopRef
+import ch.ausweg.shared.model.Trip
 import ch.ausweg.shared.model.ValidityWindow
 import kotlin.time.Instant
 
 /** Prefix of [Disruption.id]s made from OJP situations, so they never clash with scenario ids. */
 const val OJP_DISRUPTION_PREFIX = "ojp:"
-
-/**
- * Keyword rules that read Swiss situation texts (fixed SBB templates, DE/FR/IT/EN). Matched on lowercase text
- * without accents. No AI model: only these lists.
- */
-object SituationKeywords {
-    /** «Der Bahnverkehr zwischen X und Y ist unterbrochen.» → [DisruptionHints.LINE_CLOSED]. */
-    val CLOSED =
-        listOf(
-            "unterbrochen",
-            "keine zuge",
-            "interrompu",
-            "aucun train",
-            "interrott",
-            "nessun treno",
-            "interrupted",
-            "no trains",
-        )
-
-    /** «… benützen die Ersatzbusse (EV).» → [DisruptionHints.REPLACEMENT_BUS]. */
-    val BUS = listOf("ersatzbus", "bahnersatz", "bus de remplacement", "bus sostitutiv", "replacement bus")
-
-    /** → [DisruptionHints.NO_ALTERNATIVE]. */
-    val NO_ALTERNATIVE = listOf("keine alternative", "aucune alternative", "nessuna alternativa", "no alternative")
-
-    /** «Die Dauer der Einschränkung ist unbestimmt.» → open end, whatever the validity says. */
-    val OPEN_END = listOf("unbestimmt", "indeterminee", "indeterminata", "duration is unknown", "until further notice")
-
-    /** «zwischen X und Y» in each language: the section the situation is about. */
-    val BETWEEN = listOf("zwischen" to "und", "entre" to "et", "tra" to "e", "between" to "and")
-}
 
 /**
  * This situation as a [Disruption] at [now], so live OJP data goes through the same `affects()` / `advise()` as
@@ -126,6 +95,37 @@ private fun busFor(
         null
     }
 
+/**
+ * The disruptions behind the [situations] of an OJP trip answer, as they stand at [at] (the departure time asked).
+ *
+ * In trip answers, OJP lists the affected train runs, not stops: a situation without stops gets the stops of the
+ * [trips]' legs that reference it (`Leg.situationIds`), in order. If its «zwischen X und Y» section isn't among
+ * those stops, it is only a warning on those legs (no hints): either the closure is elsewhere on the train's route
+ * (an IC Interlaken → Bern → Olten is listed under «Interlaken Ost – Interlaken West unterbrochen», but the user
+ * riding it from Bern to Olten isn't affected), or the train passes the section without stopping (an IC
+ * Lausanne → Fribourg through Puidoux – Vauderens). The stops alone can't tell these apart.
+ */
+fun disruptionsFrom(
+    situations: List<Situation>,
+    trips: List<Trip>,
+    at: Instant,
+): List<Disruption> {
+    val legs = trips.flatMap { it.legs }
+    return situations.mapNotNull { situation ->
+        if (situation.stops.isNotEmpty()) return@mapNotNull situation.toDisruption(at)
+        val stops =
+            legs
+                .filter { situation.id in it.situationIds }
+                .flatMap { leg -> (listOf(leg.from) + leg.intermediate + leg.to).map { it.stop } }
+                .distinctBy { it.didok ?: it.ref }
+        val disruption = situation.copy(stops = stops).toDisruption(at)
+        when {
+            disruption == null || disruption.sections.isNotEmpty() -> disruption
+            else -> disruption.copy(hints = emptyList(), bus = null)
+        }
+    }
+}
+
 private fun ValidityWindow.contains(now: Instant): Boolean = from <= now && (to == null || now < to)
 
 private fun Situation.texts(): DisruptionText =
@@ -139,82 +139,3 @@ private fun Situation.texts(): DisruptionText =
                 duration,
             ).joinToString("\n"),
     )
-
-/**
- * Every «between A and B» in [text] where A and B are names of [stops] (both [folded]). A name must be followed
- * by a non-name character, so «Genève» doesn't match «Genève-Aéroport», and a longer stop name that matches
- * there wins, so «Bern» doesn't match «Bern Wankdorf».
- */
-private fun sectionsIn(
-    text: String,
-    stops: List<StopRef>,
-): List<Section> {
-    val named =
-        stops.mapNotNull { stop ->
-            stop.didok?.let {
-                stop.name
-                    .folded()
-                    .removeSuffix(" (i)")
-                    .trim() to it
-            }
-        }
-    return SituationKeywords.BETWEEN
-        .flatMap { (between, and) ->
-            fun matches(
-                a: String,
-                b: String,
-            ) = text.containsPhrase("$between $a $and $b")
-            named.flatMap { (a, from) ->
-                named.mapNotNull { (b, to) ->
-                    val longer = named.any { (c, _) -> c.length > b.length && c.startsWith(b) && matches(a, c) }
-                    if (from != to && !longer && matches(a, b)) Section(from, to) else null
-                }
-            }
-        }.distinctBy { setOf(it.from, it.to) }
-}
-
-/** True if [phrase] is in this text as whole words: not preceded or followed by a letter, digit or hyphen. */
-private fun String.containsPhrase(phrase: String): Boolean {
-    var i = indexOf(phrase)
-    while (i >= 0) {
-        val before = getOrNull(i - 1)
-        val after = getOrNull(i + phrase.length)
-        if (!before.isNameChar() && !after.isNameChar()) return true
-        i = indexOf(phrase, i + 1)
-    }
-    return false
-}
-
-private fun Char?.isNameChar(): Boolean = this != null && (isLetterOrDigit() || this == '-')
-
-private val ACCENTS =
-    mapOf(
-        'à' to 'a',
-        'â' to 'a',
-        'ä' to 'a',
-        'á' to 'a',
-        'ç' to 'c',
-        'é' to 'e',
-        'è' to 'e',
-        'ê' to 'e',
-        'ë' to 'e',
-        'î' to 'i',
-        'ï' to 'i',
-        'í' to 'i',
-        'ì' to 'i',
-        'ô' to 'o',
-        'ö' to 'o',
-        'ó' to 'o',
-        'ò' to 'o',
-        'ù' to 'u',
-        'û' to 'u',
-        'ü' to 'u',
-        'ú' to 'u',
-    )
-
-/** Lowercase, without accents and with single spaces, so «Gümligen» and «gumligen» compare equal. */
-internal fun String.folded(): String =
-    lowercase()
-        .map { ACCENTS[it] ?: it }
-        .joinToString("")
-        .replace(Regex("\\s+"), " ")

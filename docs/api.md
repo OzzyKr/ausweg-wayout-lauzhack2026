@@ -66,6 +66,16 @@ historical mode, the replayed time). The OJP key stays on the server.
 1. The server searches OJP. **Historical mode:** OJP only knows the current timetable, so it searches the same
    weekday and local time within the next 7 days and moves the trips back onto the replayed date (`source: SHIFTED`,
    timetable only: realtime, cancellations and OJP notices are dropped). **Live:** `source: LIVE`, with OJP `situations`.
+   Each situation also becomes a disruption (shared `disruptionsFrom()`, id `ojp:<SituationNumber>`), as it stands at
+   `departAt`, and is added to `disruptions` before matching:
+   - the section comes from the text («zwischen X und Y», «entre X et Y», «tra X e Y»), found among the situation's
+     stops; trip answers list affected train runs instead of stops, so the stops of the legs referring to it are used,
+     and a situation whose section isn't on those legs is only a warning on them, never blocking (the closure is
+     elsewhere on that train's route, or the train passes it without stopping: the stops can't tell which);
+   - keyword rules set the hints: «unterbrochen / interrompu» → `LINE_CLOSED`, «Ersatzbus / bus de remplacement» →
+     `REPLACEMENT_BUS`; otherwise (most often «eingeschränkt / restreint») it is a warning only;
+   - outside its validity windows (e.g. night works during the day) it is left out.
+   Live disruptions exist only in `/plan` answers: `/state` and SSE stay empty in live mode for now.
 2. If every trip is blocked by a current disruption (shared `affects()`), it searches again through up to 3 hub
    stations that avoid the closed sections (`data/routing/hubs.json`) and sets `rerouted: true`.
 3. Trips are ranked with shared `rankTrips()`: trips that get through first (earliest arrival), then blocked ones.

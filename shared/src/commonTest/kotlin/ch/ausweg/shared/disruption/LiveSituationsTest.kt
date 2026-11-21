@@ -189,4 +189,67 @@ class LiveSituationsTest {
         assertFalse(impact.isBlocked)
         assertEquals(listOf(d.id), impact.warnings.map { it.id })
     }
+
+    @Test
+    fun tripAnswerSituationsTakeTheStopsOfTheLegsThatReferenceThem() {
+        // Real trip answers list affected train runs, not stops.
+        val s =
+            Situation(
+                "sit-ge",
+                summary = "Der Bahnverkehr zwischen Lausanne und Genève ist eingeschränkt.",
+                validity = listOf(ValidityWindow(t("2026-11-21T05:00:00Z"), t("2026-11-22T22:59:00Z"))),
+            )
+        assertNull(s.toDisruption(evening))
+
+        fun named(
+            didok: Int,
+            name: String,
+        ) = Fx.call(didok).let { it.copy(stop = it.stop.copy(name = name)) }
+        val leg =
+            Fx.leg(8501120, 8501037, 8501008, dep = "15:00", line = "RE33").copy(
+                from = named(8501120, "Lausanne"),
+                intermediate = listOf(named(8501037, "Morges")),
+                to = named(8501008, "Genève"),
+                situationIds = listOf("sit-ge"),
+            )
+        val other = Fx.leg(8504300, 8500202, dep = "15:00")
+        val trips = listOf(Fx.trip("re", "15:00", "15:50", leg), Fx.trip("x", "15:00", "15:20", other))
+
+        val d = disruptionsFrom(listOf(s), trips, evening).single()
+        assertEquals(listOf(8501120, 8501037, 8501008), d.affectedStops)
+        assertEquals(listOf(Section(8501120, 8501008)), d.sections)
+        assertEquals(listOf(d.id), affects(trips.first(), listOf(d)).warnings.map { it.id })
+    }
+
+    @Test
+    fun aClosureElsewhereOnTheTrainsRouteOnlyWarns() {
+        // IC Interlaken Ost → Bern → Olten is listed under the Interlaken closure; the user rides Bern → Olten.
+        val s =
+            Situation(
+                "sit-io",
+                summary = "Der Bahnverkehr zwischen Interlaken Ost und Interlaken West ist unterbrochen.",
+            )
+        val leg = Fx.leg(8507000, 8500218, dep = "15:00", line = "IC61").copy(situationIds = listOf("sit-io"))
+        val trip = Fx.trip("ic", "15:00", "15:30", leg)
+        val d = disruptionsFrom(listOf(s), listOf(trip), evening).single()
+        assertTrue(d.hints.isEmpty())
+        assertFalse(affects(trip, listOf(d)).isBlocked)
+        assertEquals(listOf(d.id), affects(trip, listOf(d)).warnings.map { it.id })
+    }
+
+    @Test
+    fun aTrainPassingTheClosedSectionWithoutStoppingIsWarned() {
+        // Stop-less, as in real trip answers: the IC runs through Puidoux – Vauderens without stopping there.
+        val s = Situation("sit-pv", summary = "Der Bahnverkehr zwischen Puidoux und Vauderens ist unterbrochen.")
+        val ic = Fx.leg(Fx.LAUSANNE, Fx.ROMONT, Fx.FRIBOURG, dep = "15:00").copy(situationIds = listOf("sit-pv"))
+        val trip = Fx.trip("ic", "15:00", "15:30", ic)
+        val d = disruptionsFrom(listOf(s), listOf(trip), evening).single()
+        assertEquals(listOf(d.id), affects(trip, listOf(d)).warnings.map { it.id })
+    }
+
+    @Test
+    fun situationsWithStopsAreKeptAsTheyAre() {
+        val d = disruptionsFrom(listOf(real("44fb2fcba2cd-1-2")), emptyList(), evening).single()
+        assertEquals(listOf(Section(biel, grenchenSud)), d.sections)
+    }
 }
