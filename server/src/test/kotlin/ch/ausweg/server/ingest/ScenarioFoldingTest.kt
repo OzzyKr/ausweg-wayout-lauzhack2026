@@ -40,6 +40,8 @@ class ScenarioFoldingTest {
         assertEquals(listOf("2195005195853"), p.disruptionIds)
         assertEquals("8501120", p.suggestedFrom) // Lausanne
         assertEquals("8504100", p.suggestedTo) // Fribourg/Freiburg
+        assertEquals("Lausanne", p.suggestedFromName)
+        assertEquals("Fribourg/Freiburg", p.suggestedToName)
         assertTrue(data.stations.any { it.name == "Palézieux" && it.didok == palezieux })
     }
 
