@@ -1,0 +1,16 @@
+{
+  "_comment": "Stations the server reroutes through when every direct trip is blocked, most useful first. DIDOK numbers checked with transport.opendata.ch.",
+  "hubs": [
+    { "name": "Yverdon-les-Bains", "didok": 8504200 },
+    { "name": "Payerne", "didok": 8504134 },
+    { "name": "Bern", "didok": 8507000 },
+    { "name": "Neuchâtel", "didok": 8504221 },
+    { "name": "Biel/Bienne", "didok": 8504300 },
+    { "name": "Fribourg/Freiburg", "didok": 8504100 },
+    { "name": "Lausanne", "didok": 8501120 },
+    { "name": "Romont FR", "didok": 8504023 },
+    { "name": "Palézieux", "didok": 8504014 },
+    { "name": "Cossonay-Penthalaz", "didok": 8501115 },
+    { "name": "Genève", "didok": 8501008 }
+  ]
+}
