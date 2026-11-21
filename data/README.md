@@ -35,10 +35,11 @@
 pip install pandas openpyxl
 python data/scripts/timeline.py <VIA_ID> <KULT_ID>   # chronologie fusionnée VIA + interne + public
 python data/scripts/validate.py                      # vérifie tous les scenarios/*.events.json
+python data/scripts/pitch_stats.py                   # chiffres du pitch depuis VIA
 ```
 
 ## Chiffres pour le pitch (168 incidents VIA, septembre 2026)
-À revérifier avec un script (pas encore recalculés dans ce repo) :
+Recalculés avec `python data/scripts/pitch_stats.py` (une ligne par incident VIA, premier horodatage de chaque colonne) :
 - Médiane de **15 min** entre la création de l'incident et la première publication (moyenne 32 min).
 - Seuls **21 %** des incidents ont reçu une **recommandation de voyage**, et 18 % une info bus de remplacement.
 - Quand un bus de remplacement est publié, c'est en médiane **41 min** après la première publication.
