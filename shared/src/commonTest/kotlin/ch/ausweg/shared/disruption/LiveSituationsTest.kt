@@ -11,6 +11,7 @@ import ch.ausweg.shared.model.StopRef
 import ch.ausweg.shared.model.ValidityWindow
 import ch.ausweg.shared.ojp.OjpParser
 import ch.ausweg.shared.ojp.OjpSituationFixtures
+import ch.ausweg.shared.routing.viaCandidates
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -216,7 +217,7 @@ class LiveSituationsTest {
         val trips = listOf(Fx.trip("re", "15:00", "15:50", leg), Fx.trip("x", "15:00", "15:20", other))
 
         val d = disruptionsFrom(listOf(s), trips, evening).single()
-        assertEquals(listOf(8501120, 8501037, 8501008), d.affectedStops)
+        assertEquals(setOf(8501120, 8501037, 8501008), d.affectedStops.toSet())
         assertEquals(listOf(Section(8501120, 8501008)), d.sections)
         assertEquals(listOf(d.id), affects(trips.first(), listOf(d)).warnings.map { it.id })
     }
@@ -251,5 +252,54 @@ class LiveSituationsTest {
     fun situationsWithStopsAreKeptAsTheyAre() {
         val d = disruptionsFrom(listOf(real("44fb2fcba2cd-1-2")), emptyList(), evening).single()
         assertEquals(listOf(Section(biel, grenchenSud)), d.sections)
+    }
+
+    @Test
+    fun aClosureWithStopsButNoSectionOnlyWarns() {
+        // The stops are the whole line; without «zwischen X und Y» we can't tell where the closure is.
+        val s = situation("Der Bahnverkehr ist unterbrochen.", stops = listOf("Bern" to 8507000, "Thun" to 8507100))
+        val d = disruptionsFrom(listOf(s), emptyList(), evening).single()
+        assertTrue(d.hints.isEmpty())
+        val ic = Fx.trip("ic", "15:00", "15:20", Fx.leg(8507000, 8507100, dep = "15:00", line = "IC61"))
+        assertFalse(affects(ic, listOf(d)).isBlocked)
+    }
+
+    @Test
+    fun aStopLessClosureOnlyClosesTheStopsInsideItsSection() {
+        // IC Interlaken Ost → Thun → Spiez → Bern → Olten, closed between Thun and Spiez.
+        val s = Situation("sit-ts", summary = "Der Bahnverkehr zwischen Thun und Spiez ist unterbrochen.")
+        val stops = listOf(8507492 to "Interlaken Ost", 8507100 to "Thun", 8507483 to "Spiez", 8507000 to "Bern")
+        val calls = stops.map { (didok, name) -> Fx.call(didok).let { it.copy(stop = it.stop.copy(name = name)) } }
+        val leg =
+            Fx.leg(8507492, 8507100, 8507483, 8507000, 8500218, dep = "15:00", line = "IC61").copy(
+                from = calls.first(),
+                intermediate = calls.drop(1),
+                situationIds = listOf("sit-ts"),
+            )
+        val d = disruptionsFrom(listOf(s), listOf(Fx.trip("ic", "15:00", "16:30", leg)), evening).single()
+        assertEquals(listOf(DisruptionHints.LINE_CLOSED), d.hints)
+        assertEquals(setOf(8507100, 8507483), d.affectedStops.toSet())
+        assertEquals(listOf(8507000, 8500218), viaCandidates(listOf(d), listOf(8507100, 8507000, 8500218)))
+    }
+
+    @Test
+    fun aSituationIsBuiltFromTheLegsOfEveryAnswer() {
+        // Referenced by a leg that misses the section and by one that runs through it: the closure holds.
+        val s = Situation("sit-pv", summary = "Der Bahnverkehr zwischen Puidoux und Vauderens ist unterbrochen.")
+
+        fun named(
+            didok: Int,
+            name: String,
+        ) = Fx.call(didok).let { it.copy(stop = it.stop.copy(name = name)) }
+        val elsewhere = Fx.leg(Fx.LAUSANNE, Fx.FRIBOURG, dep = "15:00").copy(situationIds = listOf("sit-pv"))
+        val through =
+            Fx.leg(Fx.LAUSANNE, 8504012, 8504021, Fx.FRIBOURG, dep = "15:00", line = "S").copy(
+                intermediate = listOf(named(8504012, "Puidoux"), named(8504021, "Vauderens")),
+                situationIds = listOf("sit-pv"),
+            )
+        val trips = listOf(Fx.trip("a", "15:00", "15:30", elsewhere), Fx.trip("b", "15:00", "15:40", through))
+        val d = disruptionsFrom(listOf(s, s), trips, evening).single()
+        assertEquals(listOf(DisruptionHints.LINE_CLOSED), d.hints)
+        assertTrue(affects(trips[1], listOf(d)).isBlocked)
     }
 }

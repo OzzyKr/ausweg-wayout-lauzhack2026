@@ -44,7 +44,8 @@ class PlanService(
         val historical = now.clock.mode == Mode.HISTORICAL
         val query = TripQuery(request.from, request.to, request.departAt ?: now.clock.now, request.via)
         val direct = ojp.trips(query, historical)
-        var disruptions = withLive(now.disruptions, direct, query.departAt)
+        var answers = listOf(direct)
+        var disruptions = withLive(now.disruptions, answers, query.departAt)
 
         val impacts = direct.trips.map { affects(it, disruptions) }
         var trips = direct.trips
@@ -61,32 +62,35 @@ class PlanService(
                         null
                     }
                 }
+            answers = answers + extra
             trips = trips + extra.flatMap { it.trips }
             rerouted = extra.any { it.trips.isNotEmpty() }
-            disruptions = extra.fold(disruptions) { acc, found -> withLive(acc, found, query.departAt) }
+            disruptions = withLive(now.disruptions, answers, query.departAt)
         }
         return PlanResponse(
             rankTrips(trips, disruptions),
             disruptions,
             direct.source,
-            direct.situations,
+            answers.flatMap { it.situations }.distinctBy { it.id },
             rerouted,
         )
     }
 
     /**
-     * [known] plus the OJP situations of a live answer as disruptions (shared `disruptionsFrom()`), as they stand at
-     * [departAt]: a night closure starting at 21:30 counts for a 22:00 trip planned at 21:00. Shifted and recorded
-     * answers have no situations, so historical mode is unchanged.
+     * [known] plus the OJP situations of the live [answers] as disruptions (shared `disruptionsFrom()`), as they stand
+     * at [departAt]: a night closure starting at 21:30 counts for a 22:00 trip planned at 21:00. All answers go in
+     * together, so a situation is built from every leg that references it, not just the direct search's. Shifted and
+     * recorded answers have no situations, so historical mode is unchanged.
      */
     private fun withLive(
         known: List<Disruption>,
-        found: FoundTrips,
+        answers: List<FoundTrips>,
         departAt: Instant,
     ): List<Disruption> {
-        if (found.source != TripSource.LIVE) return known
-        val live = disruptionsFrom(found.situations, found.trips, departAt)
-        return (known + live).distinctBy { it.id }
+        val live = answers.filter { it.source == TripSource.LIVE }
+        if (live.isEmpty()) return known
+        val found = disruptionsFrom(live.flatMap { it.situations }, live.flatMap { it.trips }, departAt)
+        return (known + found).distinctBy { it.id }
     }
 
     /** OJP stop search, or a name search over the scenario stations when OJP can't answer. */

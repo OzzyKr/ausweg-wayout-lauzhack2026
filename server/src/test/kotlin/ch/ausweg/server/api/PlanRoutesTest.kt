@@ -92,13 +92,14 @@ class PlanRoutesTest {
     @Test
     fun `via searches that find nothing are not a reroute`() =
         withApp(
-            transport = { xml ->
-                if (xml.contains("<Via>")) {
-                    OjpXml.response()
-                } else {
-                    OjpXml.response(OjpXml.direct("2026-11-27T15:45:00Z", "2026-11-27T16:30:00Z"))
-                }
-            },
+            transport =
+                OjpTransport { xml ->
+                    if (xml.contains("<Via>")) {
+                        OjpXml.response()
+                    } else {
+                        OjpXml.response(OjpXml.direct("2026-11-27T15:45:00Z", "2026-11-27T16:30:00Z"))
+                    }
+                },
             replayAt = "2026-09-25T14:30:00Z",
         ) {
             val res = AuswegJson.decodeFromString<PlanResponse>(plan().bodyAsText())
@@ -210,5 +211,46 @@ class PlanRoutesTest {
             val later = plan("""{"from":"8501120","to":"8504100","departAt":"2026-11-21T22:00:00Z"}""")
             val res = AuswegJson.decodeFromString<PlanResponse>(later.bodyAsText())
             assertEquals(listOf("ojp:sit-night"), res.disruptions.map { it.id })
+        }
+
+    @Test
+    fun `situations of the reroute answers are returned too`() =
+        withApp(
+            transport =
+                OjpTransport { xml ->
+                    val closure =
+                        OjpXml.situation(
+                            "sit-1",
+                            "Der Bahnverkehr zwischen Puidoux und Vauderens ist unterbrochen.",
+                            "2026-11-21T16:00:00Z",
+                            "2026-11-21T20:00:00Z",
+                            8504012,
+                            8504021,
+                        )
+                    val works =
+                        OjpXml.situation(
+                            "sit-via",
+                            "Bauarbeiten in Yverdon-les-Bains.",
+                            "2026-11-21T16:00:00Z",
+                            "2026-11-21T20:00:00Z",
+                            8504200,
+                        )
+                    if (xml.contains("<Via>")) {
+                        OjpXml.responseWithSituations(
+                            listOf(works),
+                            OjpXml.viaYverdon("2026-11-21T17:10:00Z", "2026-11-21T18:35:00Z"),
+                        )
+                    } else {
+                        OjpXml.responseWithSituations(
+                            listOf(closure),
+                            OjpXml.direct("2026-11-21T17:15:00Z", "2026-11-21T18:00:00Z"),
+                        )
+                    }
+                },
+        ) {
+            val res = AuswegJson.decodeFromString<PlanResponse>(plan().bodyAsText())
+            assertTrue(res.rerouted)
+            assertEquals(listOf("sit-1", "sit-via"), res.situations.map { it.id })
+            assertEquals(listOf("ojp:sit-1", "ojp:sit-via"), res.disruptions.map { it.id })
         }
 }

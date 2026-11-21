@@ -9,6 +9,7 @@ import ch.ausweg.shared.model.EndType
 import ch.ausweg.shared.model.ReplacementBus
 import ch.ausweg.shared.model.Section
 import ch.ausweg.shared.model.Situation
+import ch.ausweg.shared.model.StopRef
 import ch.ausweg.shared.model.Trip
 import ch.ausweg.shared.model.ValidityWindow
 import kotlin.time.Instant
@@ -97,13 +98,18 @@ private fun busFor(
 
 /**
  * The disruptions behind the [situations] of an OJP trip answer, as they stand at [at] (the departure time asked).
+ * Pass the situations and trips of every answer of one plan together, so each situation is built once from all
+ * the legs that reference it.
  *
  * In trip answers, OJP lists the affected train runs, not stops: a situation without stops gets the stops of the
- * [trips]' legs that reference it (`Leg.situationIds`), in order. If its «zwischen X und Y» section isn't among
- * those stops, it is only a warning on those legs (no hints): either the closure is elsewhere on the train's route
- * (an IC Interlaken → Bern → Olten is listed under «Interlaken Ost – Interlaken West unterbrochen», but the user
- * riding it from Bern to Olten isn't affected), or the train passes the section without stopping (an IC
- * Lausanne → Fribourg through Puidoux – Vauderens). The stops alone can't tell these apart.
+ * [trips]' legs that reference it (`Leg.situationIds`). Its [Disruption.affectedStops] are then only the stops
+ * inside its section, not the whole train route, so a reroute can still go through the route's other hubs.
+ *
+ * Without a «zwischen X und Y» section found among the stops, any situation is only a warning (no hints). For a
+ * stop-less one, either the closure is elsewhere on the train's route (an IC Interlaken → Bern → Olten is listed
+ * under «Interlaken Ost – Interlaken West unterbrochen», but the user riding it from Bern to Olten isn't affected),
+ * or the train passes the section without stopping (an IC Lausanne → Fribourg through Puidoux – Vauderens). For
+ * one with stops, the stops are a whole line (Bern's S1 list) and a leg passing 2 of them may miss the closure.
  */
 fun disruptionsFrom(
     situations: List<Situation>,
@@ -111,20 +117,43 @@ fun disruptionsFrom(
     at: Instant,
 ): List<Disruption> {
     val legs = trips.flatMap { it.legs }
-    return situations.mapNotNull { situation ->
-        if (situation.stops.isNotEmpty()) return@mapNotNull situation.toDisruption(at)
-        val stops =
+    return situations.distinctBy { it.id }.mapNotNull { situation ->
+        val paths =
             legs
                 .filter { situation.id in it.situationIds }
-                .flatMap { leg -> (listOf(leg.from) + leg.intermediate + leg.to).map { it.stop } }
-                .distinctBy { it.didok ?: it.ref }
-        val disruption = situation.copy(stops = stops).toDisruption(at)
+                .map { leg -> (listOf(leg.from) + leg.intermediate + leg.to).map { it.stop } }
+        val stopLess = situation.stops.isEmpty()
+        val disruption =
+            if (stopLess) {
+                situation.copy(stops = paths.flatten().distinctBy { it.didok ?: it.ref }).toDisruption(at)
+            } else {
+                situation.toDisruption(at)
+            }
         when {
-            disruption == null || disruption.sections.isNotEmpty() -> disruption
-            else -> disruption.copy(hints = emptyList(), bus = null)
+            disruption == null -> null
+            disruption.sections.isEmpty() -> disruption.copy(hints = emptyList(), bus = null)
+            stopLess -> disruption.copy(affectedStops = stopsInside(disruption.sections, paths))
+            else -> disruption
         }
     }
 }
+
+/** Both ends of each section, plus the stops between them on [paths] that have both ends, in path order. */
+private fun stopsInside(
+    sections: List<Section>,
+    paths: List<List<StopRef>>,
+): List<Int> =
+    sections
+        .flatMap { section ->
+            val between =
+                paths.flatMap { path ->
+                    val numbers = path.map { it.didok }
+                    val a = numbers.indexOf(section.from)
+                    val b = numbers.indexOf(section.to)
+                    if (a < 0 || b < 0) emptyList() else numbers.subList(minOf(a, b), maxOf(a, b) + 1).filterNotNull()
+                }
+            listOf(section.from, section.to) + between
+        }.distinct()
 
 private fun ValidityWindow.contains(now: Instant): Boolean = from <= now && (to == null || now < to)
 
