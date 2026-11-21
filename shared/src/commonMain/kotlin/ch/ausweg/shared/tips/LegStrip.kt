@@ -34,7 +34,10 @@ data class StripLeg(
     val delayMinutes: Int = 0,
     val cancelled: Boolean = false,
     val mode: LegMode = kind.defaultMode(),
-)
+) {
+    /** Riding time, if both times are known (the strip draws longer rides wider). */
+    val minutes: Int? get() = minutesBetween(departure, arrival)
+}
 
 /** The mode a [StripKind] stands for when nothing more precise is known. */
 private fun StripKind.defaultMode(): LegMode =

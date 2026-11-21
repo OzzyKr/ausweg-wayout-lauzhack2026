@@ -60,6 +60,16 @@ sealed interface OptionsUi {
     ) : OptionsUi
 }
 
+/** The question being answered, whatever the state. */
+val OptionsUi.query: PlanQuery?
+    get() =
+        when (this) {
+            OptionsUi.Idle -> null
+            is OptionsUi.Loading -> query
+            is OptionsUi.Failed -> query
+            is OptionsUi.Ready -> query
+        }
+
 /**
  * «Your options»: plans with the backend, then keeps the pick current. On every `state` event the advice is
  * recomputed locally ([planOptions]); on every `community` event routes and tips are fetched again.

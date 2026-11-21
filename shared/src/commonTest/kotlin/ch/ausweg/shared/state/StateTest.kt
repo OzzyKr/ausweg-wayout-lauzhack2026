@@ -325,6 +325,8 @@ class StateTest {
         val two = legStrip(Fx.viaYverdon("14:40", "15:50")).legs
         val three = two + two.last()
         val ui = ShareUi(legs = three, checked = listOf(true, false, true))
+        assertTrue(ui.hasGap)
+        assertFalse(ui.copy(checked = listOf(false, false, false)).hasGap)
         assertFalse(ui.canPost)
         assertNull(newRoute(ui))
         assertTrue(ui.copy(checked = listOf(false, true, true)).canPost)

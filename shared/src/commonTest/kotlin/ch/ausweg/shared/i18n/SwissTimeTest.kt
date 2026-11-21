@@ -16,6 +16,7 @@ class SwissTimeTest {
         assertEquals(1.hours, SwissTime.offset(i("2026-01-15T12:00:00Z")))
         assertEquals("16:19", SwissTime.hhmm(i("2026-09-25T14:19:00Z")))
         assertEquals("13:00", SwissTime.hhmm(i("2026-12-01T12:00:00Z")))
+        assertEquals(16 to 19, SwissTime.hourMinute(i("2026-09-25T14:19:00Z")))
     }
 
     @Test
