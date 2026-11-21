@@ -25,7 +25,7 @@ import kotlin.time.Duration.Companion.milliseconds
 
 class EventsRouteTest {
     @Test
-    fun `sends clock and state on connect, then the new clock after a mode change`() =
+    fun `sends clock, state and community on connect, then the new clock after a mode change`() =
         testApplication {
             val wall = FakeWall(instant("2026-09-01T08:16:00Z"))
             val backend =
@@ -35,10 +35,10 @@ class EventsRouteTest {
 
             val received = mutableListOf<ServerSentEvent>()
             sseClient.sse("/events") {
-                // Collect once (a second collect would reconnect): two events on connect, then switch mode.
-                incoming.take(3).collect { event ->
+                // Collect once (a second collect would reconnect): three events on connect, then switch mode.
+                incoming.take(4).collect { event ->
                     received += event
-                    if (received.size == 2) {
+                    if (received.size == 3) {
                         client.post("/replay/start") {
                             contentType(ContentType.Application.Json)
                             setBody("""{"scenarioId":"A","play":false}""")
@@ -46,10 +46,11 @@ class EventsRouteTest {
                     }
                 }
             }
-            assertEquals(listOf("clock", "state", "clock"), received.map { it.event })
+            assertEquals(listOf("clock", "state", "community", "clock"), received.map { it.event })
+            assertEquals("0", received[2].data)
             val state = AuswegJson.decodeFromString<StateResponse>(checkNotNull(received[1].data))
             assertEquals(listOf("A", "B"), state.disruptions.map { it.id })
-            val clock = AuswegJson.decodeFromString<ClockState>(checkNotNull(received[2].data))
+            val clock = AuswegJson.decodeFromString<ClockState>(checkNotNull(received[3].data))
             assertEquals(Mode.HISTORICAL, clock.mode)
         }
 }

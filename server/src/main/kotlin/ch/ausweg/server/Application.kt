@@ -1,5 +1,7 @@
 package ch.ausweg.server
 
+import ch.ausweg.server.api.STAFF_TOKEN_HEADER
+import ch.ausweg.server.api.communityRoutes
 import ch.ausweg.server.api.planRoutes
 import ch.ausweg.server.api.replayRoutes
 import ch.ausweg.server.api.stateRoutes
@@ -29,6 +31,7 @@ fun Application.module(backend: Backend) {
         anyHost()
         allowMethod(HttpMethod.Post)
         allowHeader(HttpHeaders.ContentType)
+        allowHeader(STAFF_TOKEN_HEADER)
         allowNonSimpleContentTypes = true
     }
     routing {
@@ -36,5 +39,6 @@ fun Application.module(backend: Backend) {
         replayRoutes(backend)
         eventsRoute(backend)
         planRoutes(backend)
+        communityRoutes(backend)
     }
 }

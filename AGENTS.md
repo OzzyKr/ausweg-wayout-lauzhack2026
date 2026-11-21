@@ -30,13 +30,14 @@ The demo has two modes: **historical** replay (Sept 2026 data, with a simulated 
 
 | Module | Area | What goes where |
 |---|---|---|
-| `shared/src/commonMain/.../shared/` | `shared` | `model/` data classes · `ojp/` OJP 2.0 XML requests and parsing · `api/` backend client (REST + SSE) · `disruption/` keyword rules, leg × disruption matching, disruption state · `routing/` dropping or re-querying trips through an affected section · `tips/` ranking (votes, age, staff endorsement) and «similar disruption» matching · `i18n/` JSON string loading with English fallback |
+| `shared/src/commonMain/.../shared/` | `shared` | `model/` data classes · `ojp/` OJP 2.0 XML requests and parsing · `api/` backend client (REST + SSE) · `disruption/` keyword rules, leg × disruption matching, disruption state · `routing/` dropping or re-querying trips through an affected section · `tips/` ranking (votes, age, staff endorsement), «similar disruption» matching, leg strips · `i18n/` JSON string loading with English fallback, Swiss time formatting · `state/` screen state holders (`StateFlow`) and navigation, one per screen |
 | `shared/src/commonTest/` | `shared` | Tests for all of the above |
-| `composeApp/src/commonMain/.../app/` | `ui` | `theme/` Material 3 light and dark · `navigation/` · `components/` (leg strip, disruption card, update banner, replay bar) · `screens/` `plan`, `options`, `route` (community route), `share`, `trip` (live trip) |
+| `shared/src/jvmTest/` | `shared` | Tests that read repo files (i18n key check) |
+| `composeApp/src/commonMain/.../app/` | `ui` | `theme/` Material 3 light and dark · `navigation/` · `components/` (leg strip, disruption card, update banner, replay bar) · `screens/` `plan`, `options`, `route` (community route), `share`, `trip` (live trip), `community`, `alerts` (tabs) |
 | `composeApp/src/commonMain/composeResources/files/i18n/` | `ui` | `en.json` (source of truth), other `<lang>.json` files, `languages.json` |
 | `composeApp/src/androidMain`, `wasmJsMain` | `ui` | Platform entry points only |
-| `server/src/main/.../server/` | `server` | `ingest/` loading and joining the SBB datasets · `replay/` simulated clock · `ojp/` OJP calls (key, rate limit) · `tips/` tips and votes storage · `events/` SSE · `api/` HTTP routes |
-| `data/` | `server` | `raw/` SBB datasets (gitignored, never committed) · `seed/` demo tips |
+| `server/src/main/.../server/` | `server` | `ingest/` loading and joining the SBB datasets · `replay/` simulated clock · `ojp/` OJP calls (key, rate limit) · `tips/` tips, routes and votes storage (SQLite, `data/ausweg.db`, gitignored) · `events/` SSE · `api/` HTTP routes |
+| `data/` | `server` | `raw/` SBB datasets (gitignored, never committed) · `seed/` demo tips and routes (`community.json`) · `scenarios/` replay scenarios · `fixtures/ojp/` recorded OJP answers · `routing/` reroute hubs |
 | `gradle/`, `.github/`, `config/`, root files | `infra` | Build, CI/CD, lint config |
 
 ## 3. Engineering principles
