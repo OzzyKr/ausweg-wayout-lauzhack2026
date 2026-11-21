@@ -41,6 +41,21 @@ fun displayNow(
     elapsed: Duration,
 ): Instant = if (clock.playing) clock.now + elapsed * clock.speed else clock.now
 
+/**
+ * The disruptions to judge trips by: the backend's, or, in live mode only, [planDisruptions] (those of a `/plan`
+ * answer) while the backend pushes none. Live OJP disruptions exist only in `/plan` answers. In the replay an empty
+ * list is real (before the disruption, or an hour after it ended) and must not bring a stale copy back.
+ */
+fun AppSession.disruptionsFor(planDisruptions: List<Disruption>): List<Disruption> =
+    currentDisruptions(disruptions.value, planDisruptions, isLive)
+
+/** [pushed], or [planDisruptions] when [live] and the backend pushed none. See [disruptionsFor]. */
+internal fun currentDisruptions(
+    pushed: List<Disruption>,
+    planDisruptions: List<Disruption>,
+    live: Boolean,
+): List<Disruption> = if (live) pushed.ifEmpty { planDisruptions } else pushed
+
 /** Where [at] is in [scenario], 0..1 (replay slider). */
 fun replayFraction(
     scenario: Scenario,
@@ -100,6 +115,9 @@ class AppSession(
         combine(_clock, _scenarios) { c, list ->
             c?.takeIf { it.mode == Mode.HISTORICAL }?.scenarioId?.let { id -> list.firstOrNull { it.id == id } }
         }.stateIn(scope, SharingStarted.Eagerly, null)
+
+    /** True when the backend runs live (OJP today), false in the historical replay or before the first event. */
+    val isLive: Boolean get() = _clock.value?.mode == Mode.LIVE
 
     /** The backend clock now; the device clock until the first event arrives. */
     fun currentNow(): Instant = _clock.value?.let { displayNow(it, realClock.now() - receivedAt) } ?: realClock.now()
