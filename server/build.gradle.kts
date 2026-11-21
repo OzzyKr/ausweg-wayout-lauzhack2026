@@ -32,6 +32,8 @@ dependencies {
     implementation(libs.ktor.client.cio)
     implementation(libs.kotlinx.datetime)
     implementation(libs.logback)
+    // Community tips, routes and votes (spec: SQLite). Plain JDBC, no ORM.
+    implementation(libs.sqlite.jdbc)
     testImplementation(libs.kotlin.test.junit)
     testImplementation(libs.ktor.server.test.host)
 }
