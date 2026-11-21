@@ -39,3 +39,4 @@ Outcome: `pending` → set by the human reviewer to `accepted` / `changed: why` 
 | 2026-11-21 22:04 | claude/shared | Plan-disruption fallback only in live mode (review) | accepted |
 | 2026-11-21 22:05 | claude/ui | #11: merge #10 live-only fix; say why Post is off | pending |
 | 2026-11-21 22:23 | claude/shared | Fixed #15 review: live hints, via stops, merged answers | accepted |
+| 2026-11-21 23:28 | claude/shared | Wait card shows first train after reopening | pending |
