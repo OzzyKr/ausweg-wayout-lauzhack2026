@@ -15,6 +15,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.minutes
 
 /** Runs the folding on the real demo scenarios in `data/scenarios`. Times in comments are local (CEST). */
 class ScenarioFoldingTest {
@@ -110,14 +111,54 @@ class ScenarioFoldingTest {
     }
 
     @Test
-    fun `renens restriction warns only, then a later closure blocks again`() {
+    fun `renens restriction warns only, and the later prognosis does not re-close`() {
         val restriction = at("2026-09-17T19:06:00Z") // 21:05 interruption becomes a restriction
         assertTrue(restriction.hints.isEmpty())
-        assertTrue(restriction.sections.isNotEmpty())
+        assertEquals(2, restriction.sections.size)
 
-        val again = at("2026-09-17T19:16:00Z") // 21:15 still interrupted Allaman - Morges
-        assertEquals(listOf(DisruptionHints.LINE_CLOSED), again.hints)
-        assertEquals(1, again.sections.size)
+        val prognosis = at("2026-09-17T19:16:00Z") // 21:15 PROGNOSIS naming Allaman - Morges
+        assertTrue(prognosis.hints.isEmpty())
+        assertEquals(restriction.pairs(), prognosis.pairs())
+        assertEquals(EndType.AT_LEAST, prognosis.expectedEndType)
+    }
+
+    @Test
+    fun `only closing kinds close the line, and they re-close after a restriction`() {
+        val incident =
+            Incident(
+                id = "X",
+                title = "t",
+                lineStations = listOf("A", "B", "C"),
+                stationIds = mapOf("A" to 1, "B" to 2, "C" to 3),
+                replayStart = instant("2026-09-01T08:00:00Z"),
+                replayEnd = instant("2026-09-01T12:00:00Z"),
+            )
+
+        fun event(
+            minute: Int,
+            kind: String,
+            vararg sections: Pair<String, String>,
+        ) = ScenarioEvent(
+            t = instant("2026-09-01T08:00:00Z") + minute.minutes,
+            source = InfoSource.PUBLIC,
+            kind = kind,
+            summary = kind,
+            sections = sections.map { (a, b) -> NamedSection(a, b) }.ifEmpty { null },
+        )
+        val versions =
+            ScenarioFolder(incident, "x")
+                .fold(
+                    listOf(
+                        event(0, "INFO", "A" to "B"), // names a section, but nothing is closed yet
+                        event(1, "INTERRUPTION", "A" to "B"),
+                        event(2, "RESTRICTION", "A" to "B"),
+                        event(3, "INTERRUPTION", "B" to "C"),
+                    ),
+                ).updates
+                .map { it.disruption }
+        assertEquals(listOf(false, true, false, true), versions.map { DisruptionHints.LINE_CLOSED in it.hints })
+        assertTrue(versions[0].sections.isEmpty())
+        assertEquals(listOf(2 to 3), versions[3].pairs())
     }
 
     @Test

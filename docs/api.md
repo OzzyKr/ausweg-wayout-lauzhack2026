@@ -83,8 +83,10 @@ The server reads every `data/scenarios/*.events.json` (override the folder with 
 
 - INTERNAL and VIA events count too, so the app reacts when SBB knew something, not only when it was published.
   Only the paraphrased `summary` is sent (as `texts.fr.body` and in the timeline); `raw` is never read.
-- Sections from events add up while the line is closed. `RESTRICTION` replaces them and stops blocking (warning only).
-  `RESTORATION` reopens the sections it names (all of them if it names none). `ENDED` ends the disruption.
+- Only closing kinds (`INTERRUPTION`, `DETECTED`, `SEVERITY_UP`) naming sections close the line (`LINE_CLOSED`).
+  Other kinds naming sections add to them while the line is closed and are ignored otherwise.
+  `RESTRICTION` replaces the sections and stops blocking (warning only). `RESTORATION` reopens the sections it names
+  (all of them if it names none). `ENDED` ends the disruption.
 - Buses come on top of a closed line (`LINE_CLOSED` stays). A bus event from the same place updates the current bus
   without losing its details, and a bus from another place replaces it only if it says at least as much.
 - A prognosis with `type: UNKNOWN` clears `expectedEnd`.

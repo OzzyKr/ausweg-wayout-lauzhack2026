@@ -20,8 +20,11 @@ internal const val SCENARIO_LANGUAGE = "fr"
  * forward what earlier events said (sections, expected end, bus) and changing only what this event says.
  *
  * Section rules (the data's events don't always repeat the full scope):
- * - While the line is closed, sections from any event are **added** (an INFO «correction» naming one section
- *   doesn't reopen the others). After a restriction or restoration, a new closing event **replaces** them.
+ * - Only closing kinds (`INTERRUPTION`, `DETECTED`, `SEVERITY_UP`) naming sections close the line. While it is
+ *   closed, they add their sections; after a restriction or restoration, they **replace** them and close it again.
+ * - Other kinds (`PROGNOSIS`, `INFO`, `SCOPE_CHANGE`…) naming sections **add** them while the line is closed (an
+ *   INFO «correction» naming one section doesn't reopen the others) and are ignored otherwise: a prognosis after a
+ *   restriction doesn't re-close the line.
  * - `RESTRICTION` replaces the sections and stops blocking (trains run, with limits): a warning only.
  * - `RESTORATION` with sections reopens those; without sections (or once none are left) it stops blocking.
  * - `ENDED` ends the disruption.
@@ -89,11 +92,14 @@ internal class ScenarioFolder(
                 if (named != null) sections = sections.filterNot { s -> named.any { it.sameAs(s) } }
                 if (named == null || sections.isEmpty()) closed = false
             }
-            else ->
+            in CLOSING ->
                 if (named != null) {
                     sections = if (closed) (sections + named).distinctSections() else named
                     closed = true
                 }
+            else ->
+                // PROGNOSIS, INFO, SCOPE_CHANGE…: refine the scope of a closure, never start one.
+                if (named != null && closed) sections = (sections + named).distinctSections()
         }
     }
 
@@ -158,6 +164,9 @@ internal class ScenarioFolder(
         const val ENDED = "ENDED"
         const val RESTRICTION = "RESTRICTION"
         const val RESTORATION = "RESTORATION"
+
+        /** Kinds that close the line when they name sections. */
+        val CLOSING = setOf("INTERRUPTION", "DETECTED", "SEVERITY_UP")
     }
 }
 
