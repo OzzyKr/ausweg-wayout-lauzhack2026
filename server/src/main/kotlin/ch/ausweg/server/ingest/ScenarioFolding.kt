@@ -134,6 +134,8 @@ internal class ScenarioFolder(
             disruptionIds = listOf(incident.id),
             suggestedFrom = didok(incident.suggestedFrom ?: incident.lineStations.firstOrNull())?.toString(),
             suggestedTo = didok(incident.suggestedTo ?: incident.lineStations.lastOrNull())?.toString(),
+            suggestedFromName = incident.suggestedFrom ?: incident.lineStations.firstOrNull(),
+            suggestedToName = incident.suggestedTo ?: incident.lineStations.lastOrNull(),
         )
 
     private fun didok(name: String?): Int? =

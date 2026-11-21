@@ -2,6 +2,7 @@ package ch.ausweg.server.api
 
 import ch.ausweg.server.AuswegJson
 import ch.ausweg.server.Backend
+import ch.ausweg.server.BackendServices
 import ch.ausweg.server.FakeWall
 import ch.ausweg.server.OjpXml
 import ch.ausweg.server.ingest.ScenarioDirSource
@@ -52,8 +53,7 @@ class PlanRoutesTest {
             Backend(
                 ScenarioDirSource(Path.of("../data/scenarios")),
                 wall,
-                ojp = OjpService(transport, wall = wall, minInterval = Duration.ZERO),
-                hubs = hubs,
+                services = BackendServices(OjpService(transport, wall = wall, minInterval = Duration.ZERO), hubs),
             )
         if (replayAt != null) {
             backend.mode.startScenario("puidoux-vauderens_2026-09-25", play = false)
