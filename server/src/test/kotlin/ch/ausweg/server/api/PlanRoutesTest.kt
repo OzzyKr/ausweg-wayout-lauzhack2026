@@ -92,13 +92,14 @@ class PlanRoutesTest {
     @Test
     fun `via searches that find nothing are not a reroute`() =
         withApp(
-            transport = { xml ->
-                if (xml.contains("<Via>")) {
-                    OjpXml.response()
-                } else {
-                    OjpXml.response(OjpXml.direct("2026-11-27T15:45:00Z", "2026-11-27T16:30:00Z"))
-                }
-            },
+            transport =
+                OjpTransport { xml ->
+                    if (xml.contains("<Via>")) {
+                        OjpXml.response()
+                    } else {
+                        OjpXml.response(OjpXml.direct("2026-11-27T15:45:00Z", "2026-11-27T16:30:00Z"))
+                    }
+                },
             replayAt = "2026-09-25T14:30:00Z",
         ) {
             val res = AuswegJson.decodeFromString<PlanResponse>(plan().bodyAsText())
@@ -130,5 +131,126 @@ class PlanRoutesTest {
     fun `stop search needs q`() =
         withApp {
             assertEquals(HttpStatusCode.BadRequest, client.get("/stops").status)
+        }
+
+    /** Live mode at 17:00: OJP answers today's trips, and the direct one carries [situation]. */
+    private fun liveOjp(situation: String) =
+        OjpTransport { xml ->
+            if (xml.contains("<Via>")) {
+                OjpXml.response(OjpXml.viaYverdon("2026-11-21T17:10:00Z", "2026-11-21T18:35:00Z"))
+            } else {
+                OjpXml.responseWithSituations(
+                    listOf(situation),
+                    OjpXml.direct("2026-11-21T17:15:00Z", "2026-11-21T18:00:00Z"),
+                )
+            }
+        }
+
+    @Test
+    fun `live OJP interruption blocks the direct trip and reroutes`() =
+        withApp(
+            transport =
+                liveOjp(
+                    OjpXml.situation(
+                        "sit-1",
+                        "Der Bahnverkehr zwischen Puidoux und Vauderens ist unterbrochen.",
+                        "2026-11-21T16:00:00Z",
+                        "2026-11-21T20:00:00Z",
+                        8504012,
+                        8504021,
+                    ),
+                ),
+        ) {
+            val res = AuswegJson.decodeFromString<PlanResponse>(plan().bodyAsText())
+            assertEquals(TripSource.LIVE, res.source)
+            assertEquals(listOf("ojp:sit-1"), res.disruptions.map { it.id })
+            assertTrue(res.rerouted)
+            assertEquals(listOf("IC5", "IR15"), res.trips.map { it.legs.first().line })
+            assertEquals(listOf("sit-1"), res.situations.map { it.id })
+        }
+
+    @Test
+    fun `live OJP restriction is only a warning`() =
+        withApp(
+            transport =
+                liveOjp(
+                    OjpXml.situation(
+                        "sit-2",
+                        "Der Bahnverkehr zwischen Puidoux und Vauderens ist eingeschränkt.",
+                        "2026-11-21T16:00:00Z",
+                        "2026-11-21T20:00:00Z",
+                        8504012,
+                        8504021,
+                    ),
+                ),
+        ) {
+            val res = AuswegJson.decodeFromString<PlanResponse>(plan().bodyAsText())
+            assertEquals(listOf("ojp:sit-2"), res.disruptions.map { it.id })
+            assertFalse(res.rerouted)
+            assertEquals(listOf("IR15"), res.trips.map { it.legs.first().line })
+        }
+
+    @Test
+    fun `live situations count at the departure time, not when planning`() =
+        withApp(
+            transport =
+                liveOjp(
+                    OjpXml.situation(
+                        "sit-night",
+                        "Der Bahnverkehr zwischen Puidoux und Vauderens ist unterbrochen.",
+                        "2026-11-21T21:30:00Z",
+                        "2026-11-22T02:30:00Z",
+                        8504012,
+                        8504021,
+                    ),
+                ),
+        ) {
+            val now = AuswegJson.decodeFromString<PlanResponse>(plan().bodyAsText())
+            assertTrue(now.disruptions.isEmpty(), "17:00: the night closure isn't on yet")
+
+            val later = plan("""{"from":"8501120","to":"8504100","departAt":"2026-11-21T22:00:00Z"}""")
+            val res = AuswegJson.decodeFromString<PlanResponse>(later.bodyAsText())
+            assertEquals(listOf("ojp:sit-night"), res.disruptions.map { it.id })
+        }
+
+    @Test
+    fun `situations of the reroute answers are returned too`() =
+        withApp(
+            transport =
+                OjpTransport { xml ->
+                    val closure =
+                        OjpXml.situation(
+                            "sit-1",
+                            "Der Bahnverkehr zwischen Puidoux und Vauderens ist unterbrochen.",
+                            "2026-11-21T16:00:00Z",
+                            "2026-11-21T20:00:00Z",
+                            8504012,
+                            8504021,
+                        )
+                    val works =
+                        OjpXml.situation(
+                            "sit-via",
+                            "Bauarbeiten in Yverdon-les-Bains.",
+                            "2026-11-21T16:00:00Z",
+                            "2026-11-21T20:00:00Z",
+                            8504200,
+                        )
+                    if (xml.contains("<Via>")) {
+                        OjpXml.responseWithSituations(
+                            listOf(works),
+                            OjpXml.viaYverdon("2026-11-21T17:10:00Z", "2026-11-21T18:35:00Z"),
+                        )
+                    } else {
+                        OjpXml.responseWithSituations(
+                            listOf(closure),
+                            OjpXml.direct("2026-11-21T17:15:00Z", "2026-11-21T18:00:00Z"),
+                        )
+                    }
+                },
+        ) {
+            val res = AuswegJson.decodeFromString<PlanResponse>(plan().bodyAsText())
+            assertTrue(res.rerouted)
+            assertEquals(listOf("sit-1", "sit-via"), res.situations.map { it.id })
+            assertEquals(listOf("ojp:sit-1", "ojp:sit-via"), res.disruptions.map { it.id })
         }
 }

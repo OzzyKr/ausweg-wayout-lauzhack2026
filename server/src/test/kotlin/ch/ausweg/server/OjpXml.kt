@@ -53,6 +53,41 @@ object OjpXml {
         )}</OJPTripDelivery></siri:ServiceDelivery></OJPResponse>
 </OJP>"""
 
+    /** A live trip answer that also carries [situations] (see [situation]) in its response context. */
+    fun responseWithSituations(
+        situations: List<String>,
+        vararg trips: String,
+    ) = response(*trips).replace(
+        "<OJPTripDelivery>",
+        "<OJPTripDelivery><TripResponseContext><Situations>${situations.joinToString(
+            "",
+        )}</Situations></TripResponseContext>",
+    )
+
+    /** A Swiss-style `PtSituation`: German [summary], affected [stops] (DIDOK), valid [from] – [to]. */
+    fun situation(
+        id: String,
+        summary: String,
+        from: String,
+        to: String,
+        vararg stops: Int,
+    ) = "<PtSituation><siri:SituationNumber>$id</siri:SituationNumber><siri:Version>1</siri:Version>" +
+        "<siri:ValidityPeriod><siri:StartTime>$from</siri:StartTime>" +
+        "<siri:EndTime>$to</siri:EndTime></siri:ValidityPeriod>" +
+        "<siri:PublishingActions><siri:PublishingAction><siri:PublishAtScope><siri:Affects><siri:StopPlaces>" +
+        stops.joinToString("") {
+            "<siri:AffectedStopPlace><siri:StopPlaceRef>$it</siri:StopPlaceRef>" +
+                "<siri:PlaceName>${NAMES[it] ?: it}</siri:PlaceName></siri:AffectedStopPlace>"
+        } +
+        "</siri:StopPlaces></siri:Affects></siri:PublishAtScope>" +
+        "<siri:PassengerInformationAction><siri:TextualContent>" +
+        "<siri:SummaryContent><siri:SummaryText xml:lang=\"DE\">$summary</siri:SummaryText></siri:SummaryContent>" +
+        "</siri:TextualContent></siri:PassengerInformationAction></siri:PublishingAction></siri:PublishingActions>" +
+        "</PtSituation>"
+
+    private val NAMES =
+        mapOf(8501120 to "Lausanne", 8504012 to "Puidoux", 8504021 to "Vauderens", 8504100 to "Fribourg")
+
     fun locations(vararg names: Pair<Int, String>) =
         """<?xml version="1.0" encoding="UTF-8"?>
 <OJP xmlns="http://www.vdv.de/ojp" xmlns:siri="http://www.siri.org.uk/siri" version="2.0">
