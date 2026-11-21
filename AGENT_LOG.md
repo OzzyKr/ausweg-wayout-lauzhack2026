@@ -21,3 +21,4 @@ Outcome: `pending` → set by the human reviewer to `accepted` / `changed: why` 
 | 2026-11-21 17:00 | claude/server | Review #4: merge main, sections list, advise sketch, log outcomes | changed: fit server contract |
 
 | 2026-11-21 17:31 | claude/shared | Advice contract, Disruption sections/bus, affects/advise stubs | pending |
+| 2026-11-21 17:42 | claude/shared | Implement affects() and advise() + 26 tests | pending |
