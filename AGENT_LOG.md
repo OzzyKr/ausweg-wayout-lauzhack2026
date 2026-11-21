@@ -19,7 +19,6 @@ Outcome: `pending` → set by the human reviewer to `accepted` / `changed: why` 
 | 2026-11-21 16:46 | claude/server | pitch_stats.py: pitch numbers recomputed from VIA | accepted |
 | 2026-11-21 16:53 | claude/shared | OJP fixtures: official station names and DIDOK numbers | accepted |
 | 2026-11-21 17:00 | claude/server | Review #4: merge main, sections list, advise sketch, log outcomes | changed: fit server contract |
-
 | 2026-11-21 17:31 | claude/shared | Advice contract, Disruption sections/bus, affects/advise stubs | pending |
 | 2026-11-21 17:42 | claude/shared | Implement affects() and advise() + 26 tests | pending |
 | 2026-11-21 18:30 | claude/server | Scenario ingest, timeline, OJP /plan + /stops, rerouting | pending |
@@ -29,3 +28,9 @@ Outcome: `pending` → set by the human reviewer to `accepted` / `changed: why` 
 | 2026-11-21 19:51 | claude/shared | App state: API client, SSE, i18n, screen state + tests | pending |
 | 2026-11-21 21:43 | claude/shared | Fix #10 review: departed picks, share, routes, banners | pending |
 | 2026-11-21 21:51 | claude/shared | Live trip uses plan disruptions; unique banner ids | pending |
+| 2026-11-21 18:30 | claude/server | Scenario ingest, timeline, OJP /plan + /stops, rerouting | accepted |
+| 2026-11-21 18:41 | claude/server | Community tips, routes, votes (SQLite) + ranking | accepted |
+| 2026-11-21 18:49 | claude/server | Review #7: closing kinds only, rerouted needs new trips | accepted |
+| 2026-11-21 19:37 | claude/server | #8 into main, scenario stop names, AGENTS.md table | accepted |
+| 2026-11-21 20:25 | claude/shared | Richer OJP situation parsing + stop-event request | pending |
+| 2026-11-21 21:41 | claude/shared | Review #12: own log row back to pending | pending |
