@@ -1,7 +1,9 @@
 package ch.ausweg.shared.disruption
 
 import ch.ausweg.shared.model.Advice
+import ch.ausweg.shared.model.AdviceReason
 import ch.ausweg.shared.model.Disruption
+import ch.ausweg.shared.model.EndType
 import ch.ausweg.shared.model.Trip
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
@@ -23,12 +25,47 @@ val DEFAULT_WAIT_MARGIN: Duration = 5.minutes
  * 4. Some end unknown: [Advice.Detour] (OPEN_ENDED) if there's an alternative.
  * 5. No alternative, but a blocking disruption has a `bus` -> [Advice.TakeBus] (BUS_AVAILABLE).
  * 6. Otherwise [Advice.Wait] with `until = null` (NO_ALTERNATIVE).
+ *
+ * A trip blocked only by cancelled legs (no blocking disruption) has no known end, so rule 3 never applies.
  */
-@Suppress("UnusedParameter") // stub: remove when implemented
 fun advise(
     trip: Trip,
     disruptions: List<Disruption>,
     now: Instant,
     alternatives: List<Trip>,
     waitMargin: Duration = DEFAULT_WAIT_MARGIN,
-): Advice = TODO("blue")
+): Advice {
+    val impact = affects(trip, disruptions)
+    if (!impact.isBlocked) return Advice.Ok(impact.warnings, impact.skippedStops)
+
+    val usable = alternatives.filter { !affects(it, disruptions).isBlocked }.sortedBy { it.arrival }
+    val best = usable.firstOrNull()
+    val lastToEnd = lastToEnd(impact.blocking)
+
+    return when {
+        lastToEnd != null -> {
+            val (disruption, end) = lastToEnd
+            val waitArrival = maxOf(now, trip.departure, end) + (trip.arrival - trip.departure)
+            if (best == null || waitArrival <= best.arrival + waitMargin) {
+                Advice.Wait(end, disruption.expectedEndType, AdviceReason.WAIT_IS_FASTER, impact)
+            } else {
+                Advice.Detour(usable, AdviceReason.DETOUR_IS_FASTER, impact)
+            }
+        }
+        best != null -> Advice.Detour(usable, AdviceReason.OPEN_ENDED, impact)
+        else -> {
+            val bus = impact.blocking.firstNotNullOfOrNull { it.bus }
+            if (bus != null) {
+                Advice.TakeBus(bus, AdviceReason.BUS_AVAILABLE, impact)
+            } else {
+                Advice.Wait(null, EndType.UNKNOWN, AdviceReason.NO_ALTERNATIVE, impact)
+            }
+        }
+    }
+}
+
+/** The blocking disruption that ends last and its end, or null if there is none or any of them has no known end. */
+private fun lastToEnd(blocking: List<Disruption>): Pair<Disruption, Instant>? {
+    val ends = blocking.map { d -> d.expectedEnd?.let { d to it } ?: return null }
+    return ends.maxByOrNull { it.second }
+}
