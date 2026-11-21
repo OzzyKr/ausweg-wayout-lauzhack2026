@@ -1,5 +1,6 @@
 package ch.ausweg.server
 
+import ch.ausweg.server.api.planRoutes
 import ch.ausweg.server.api.replayRoutes
 import ch.ausweg.server.api.stateRoutes
 import ch.ausweg.server.events.eventsRoute
@@ -34,5 +35,6 @@ fun Application.module(backend: Backend) {
         stateRoutes(backend)
         replayRoutes(backend)
         eventsRoute(backend)
+        planRoutes(backend)
     }
 }

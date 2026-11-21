@@ -27,6 +27,10 @@ dependencies {
     implementation(libs.ktor.server.content.negotiation)
     implementation(libs.ktor.server.cors)
     implementation(libs.ktor.serialization.kotlinx.json)
+    // OJP calls (the key stays on the server); both already in the catalog for shared.
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.cio)
+    implementation(libs.kotlinx.datetime)
     implementation(libs.logback)
     testImplementation(libs.kotlin.test.junit)
     testImplementation(libs.ktor.server.test.host)

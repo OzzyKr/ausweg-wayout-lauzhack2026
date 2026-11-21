@@ -16,11 +16,16 @@ data class DisruptionText(
 /**
  * A stretch of line between two stations, as DIDOK numbers (e.g. Puidoux 8504012 – Vauderens 8504021).
  * Direction doesn't matter: a train from [to] to [from] is in the section too.
+ *
+ * @property line every station of the line the section is on, in order (DIDOK), when the data knows it. OJP only
+ *   lists the stops a train serves, so an IC running Lausanne → Fribourg non-stop never shows Puidoux or Vauderens;
+ *   with [line], matching sees that it runs through the section anyway. Empty for sections on lines we don't know.
  */
 @Serializable
 data class Section(
     val from: Int,
     val to: Int,
+    val line: List<Int> = emptyList(),
 )
 
 /** How firm [Disruption.expectedEnd] is, as the published text says it («environ», «au minimum»…). */
