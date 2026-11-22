@@ -39,6 +39,7 @@ class AuswegApp(
     val share = ShareState(api, scope)
     val trip = TripState(session, scope)
     val community = CommunityState(api, session, voting, scope)
+    val theme = ThemeState(settings)
 
     private val _language = MutableStateFlow(settings[SettingKeys.LANGUAGE])
 

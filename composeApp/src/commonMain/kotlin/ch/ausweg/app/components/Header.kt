@@ -77,6 +77,7 @@ fun HeaderControls(
                 )
             }
         }
+        ThemeToggle(app.theme)
         LanguageMenu(language ?: "en", languages) { app.setLanguage(it, languages) }
     }
     if (sheet) {
