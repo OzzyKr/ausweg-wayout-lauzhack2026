@@ -10,18 +10,23 @@ import ch.ausweg.shared.model.RankedTip
 import ch.ausweg.shared.model.StopRef
 import ch.ausweg.shared.model.Trip
 import ch.ausweg.shared.routing.OptionsView
+import ch.ausweg.shared.routing.needsReplan
 import ch.ausweg.shared.routing.planOptions
 import ch.ausweg.shared.routing.trip
 import io.ktor.client.plugins.ResponseException
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
 
 /** Why the options screen has nothing to show. Each value is an i18n key (`options.error.<name>`). */
 enum class LoadError {
@@ -73,20 +78,44 @@ val OptionsUi.query: PlanQuery?
 /**
  * «Your options»: plans with the backend, then keeps the pick current. On every `state` event the advice is
  * recomputed locally ([planOptions]); on every `community` event routes and tips are fetched again.
+ *
+ * The trips themselves come from one `/plan` call, so they age while the clock runs (replay or live). The answer is
+ * fetched again quietly, keeping the old one on screen, when the disruptions change (the backend's detour search
+ * depends on them) and, for «leave now» searches, when [needsReplan] says the pick has left or the clock went back.
+ * At most one such call runs per [replanGap] (real time), so a fast replay can't flood OJP.
  */
 class OptionsState(
     private val api: AuswegApi,
     private val session: AppSession,
     private val scope: CoroutineScope,
+    private val replanGap: Duration = REPLAN_GAP,
 ) {
     private val _ui = MutableStateFlow<OptionsUi>(OptionsUi.Idle)
     val ui: StateFlow<OptionsUi> = _ui.asStateFlow()
     private var job: Job? = null
     private var language: String? = null
 
+    /** The backend clock when the shown answer was asked for. */
+    private var plannedAt: Instant? = null
+
+    /** False after a fresh answer was already stale (e.g. a recorded one): replanning on the clock wouldn't help. */
+    private var followClock = true
+    private var replanJob: Job? = null
+    private var replanAgain = false
+
     init {
-        scope.launch { session.disruptions.drop(1).collect { recompute(it) } }
+        scope.launch {
+            session.disruptions.drop(1).collect {
+                recompute(it)
+                requestReplan()
+            }
+        }
         scope.launch { session.community.drop(1).collect { refreshCommunity() } }
+        scope.launch {
+            session.now.collect { now ->
+                if (now != null && replanJob?.isActive != true && isStale(now)) requestReplan()
+            }
+        }
     }
 
     /** Searches [query]; [language] is the UI language, for the texts of live disruptions. */
@@ -95,22 +124,74 @@ class OptionsState(
         language: String? = null,
     ) {
         job?.cancel()
+        replanJob?.cancel()
+        replanAgain = false
         this.language = language
         _ui.value = OptionsUi.Loading(query)
         job =
             scope.launch {
-                val request = PlanRequest(query.from.planRef(), query.to.planRef(), query.departAt, language = language)
-                attempt { api.plan(request) }
+                val plannedAt = session.currentNow()
+                attempt { api.plan(query.toRequest(language)) }
                     .onSuccess { response ->
                         if (response.trips.isEmpty()) {
                             _ui.value = OptionsUi.Failed(query, LoadError.NO_CONNECTIONS)
                         } else {
-                            val disruptions = session.disruptionsFor(response.disruptions)
-                            val view = planOptions(response.trips, disruptions, session.currentNow())
-                            _ui.value = OptionsUi.Ready(query, response, view)
-                            refreshCommunity()
+                            show(query, response, plannedAt)
                         }
                     }.onFailure { _ui.value = OptionsUi.Failed(query, it.toLoadError()) }
+            }
+    }
+
+    /** Shows [response], asked for at [plannedAt], as the answer to [query]; routes and tips stay until refreshed. */
+    private fun show(
+        query: PlanQuery,
+        response: PlanResponse,
+        plannedAt: Instant,
+    ) {
+        val disruptions = session.disruptionsFor(response.disruptions)
+        val view = planOptions(response.trips, disruptions, session.currentNow())
+        val old = _ui.value as? OptionsUi.Ready
+        _ui.value =
+            if (old != null && old.query == query) {
+                old.copy(response = response, view = view)
+            } else {
+                OptionsUi.Ready(query, response, view)
+            }
+        this.plannedAt = plannedAt
+        followClock = query.departAt == null && !needsReplan(view, plannedAt, plannedAt)
+        refreshCommunity()
+    }
+
+    private fun isStale(now: Instant): Boolean {
+        val ready = _ui.value as? OptionsUi.Ready
+        val at = plannedAt
+        return followClock && ready != null && at != null && needsReplan(ready.view, at, now)
+    }
+
+    /**
+     * Fetches the shown answer again without leaving [OptionsUi.Ready]; keeps the old one if that fails or finds
+     * nothing. Requests during a call or its [replanGap] are merged into one more call after it.
+     */
+    private fun requestReplan() {
+        if (_ui.value !is OptionsUi.Ready) return
+        if (replanJob?.isActive == true) {
+            replanAgain = true
+            return
+        }
+        replanJob =
+            scope.launch {
+                do {
+                    replanAgain = false
+                    val ready = _ui.value as? OptionsUi.Ready ?: break
+                    val plannedAt = session.currentNow()
+                    attempt { api.plan(ready.query.toRequest(language)) }.onSuccess { response ->
+                        val current = _ui.value
+                        if (response.trips.isNotEmpty() && current is OptionsUi.Ready && current.query == ready.query) {
+                            show(ready.query, response, plannedAt)
+                        }
+                    }
+                    delay(replanGap)
+                } while (replanAgain)
             }
     }
 
@@ -154,6 +235,12 @@ class OptionsState(
         }
     }
 }
+
+/** At most one automatic re-plan per this much real time. */
+private val REPLAN_GAP: Duration = 5.seconds
+
+private fun PlanQuery.toRequest(language: String?): PlanRequest =
+    PlanRequest(from.planRef(), to.planRef(), departAt, language = language)
 
 /** What `/plan` takes for a stop: its DIDOK number when known, else its OJP ref. */
 fun StopRef.planRef(): String = didok?.toString() ?: ref

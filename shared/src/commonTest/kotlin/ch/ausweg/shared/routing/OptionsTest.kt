@@ -19,9 +19,12 @@ import ch.ausweg.shared.model.EndType
 import ch.ausweg.shared.model.ReplacementBus
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 /** Clock 14:30Z; the fire closes Puidoux – Vauderens until 16:00Z «environ». */
 class OptionsTest {
@@ -93,6 +96,28 @@ class OptionsTest {
         val v = planOptions(emptyList(), listOf(fire), now)
         assertNull(v.usual)
         assertNull(v.pick)
+    }
+
+    @Test
+    fun theUserCaseAfterTheDisruptionEndsTheOldAnswerIsStale() {
+        // Planned at 14:30 during the fire. At 16:30 the fire is over: nothing is blocked, so the pick is the
+        // first trip of the old answer, the 14:40 detour, long gone. A fresh search is due.
+        val detour = viaYverdon("14:40", "15:50")
+        val v = planOptions(listOf(detour, ic1), emptyList(), t("16:30"))
+        assertEquals(Pick.Go(detour), v.pick)
+        assertTrue(needsReplan(v, plannedAt = now, now = t("16:30")))
+    }
+
+    @Test
+    fun replanWhenThePickLeftOrTheClockWentBack() {
+        val v = planOptions(listOf(ic1), emptyList(), now)
+        assertFalse(needsReplan(v, plannedAt = now, now = t("14:44")))
+        assertFalse(needsReplan(v, plannedAt = now, now = t("14:45")))
+        assertTrue(needsReplan(v, plannedAt = now, now = t("14:46")))
+        // Heartbeat jitter is fine; a seek back before the search isn't.
+        assertFalse(needsReplan(v, plannedAt = now, now = now - 30.seconds))
+        assertTrue(needsReplan(v, plannedAt = now, now = t("13:00")))
+        assertFalse(needsReplan(planOptions(emptyList(), emptyList(), now), plannedAt = now, now = t("18:00")))
     }
 
     @Test

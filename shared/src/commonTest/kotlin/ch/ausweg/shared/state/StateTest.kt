@@ -157,6 +157,60 @@ class StateTest {
         }
 
     @Test
+    fun theReplayMovingOnPlansAgainQuietly() =
+        runTest {
+            // Planned at 14:30 during the fire: detour at 14:40 or the blocked IC1 at 14:45.
+            val detour = Fx.viaYverdon("14:40", "15:50")
+            api.planResponse = api.planResponse?.copy(trips = listOf(detour, ic1))
+            val app = app()
+            state(fire)
+            app.findMyWay()
+            runCurrent()
+            assertEquals(Pick.Go(detour), assertIs<OptionsUi.Ready>(app.options.ui.value).view.pick)
+            val plans = { api.calls.count { it.startsWith("plan ") } }
+            assertEquals(1, plans())
+
+            // The replay runs on to 16:30 and the fire ends: the old answer's trips have all left.
+            val fresh = Fx.viaYverdon("16:40", "17:50")
+            api.planResponse = api.planResponse?.copy(trips = listOf(fresh))
+            api.clock = api.clock.copy(now = t("16:30"))
+            state(fire.copy(status = ch.ausweg.shared.model.DisruptionStatus.ENDED))
+            assertEquals(2, plans())
+            val ready = assertIs<OptionsUi.Ready>(app.options.ui.value)
+            assertEquals(Pick.Go(fresh), ready.view.pick)
+            assertEquals(listOf(FakeApi.ROUTE), ready.routes)
+
+            // More changes right away wait for the gap, then go out as one call.
+            state(fire.copy(status = ch.ausweg.shared.model.DisruptionStatus.ENDED, version = 3))
+            state()
+            assertEquals(2, plans())
+            advanceTimeBy(6.seconds)
+            runCurrent()
+            assertEquals(3, plans())
+
+            // Seeking back before the search plans again too.
+            advanceTimeBy(6.seconds)
+            api.emit(ServerEvent.Clock(api.clock.copy(now = t("14:00"))))
+            runCurrent()
+            assertEquals(4, plans())
+        }
+
+    @Test
+    fun aRecordedAnswerThatIsAlreadyStaleIsNotFetchedAgainAndAgain() =
+        runTest {
+            // The backend only has a recording from 14:45; the clock is 16:30.
+            api.clock = api.clock.copy(now = t("16:30"))
+            val app = app()
+            state()
+            app.findMyWay()
+            runCurrent()
+            assertIs<OptionsUi.Ready>(app.options.ui.value)
+            advanceTimeBy(60.seconds)
+            runCurrent()
+            assertEquals(1, api.calls.count { it.startsWith("plan ") })
+        }
+
+    @Test
     fun planErrorsAreKept() =
         runTest {
             val app = app()

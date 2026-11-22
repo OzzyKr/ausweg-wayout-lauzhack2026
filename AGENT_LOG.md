@@ -54,3 +54,4 @@ Outcome: `pending` → set by the human reviewer to `accepted` / `changed: why` 
 | 2026-11-22 09:13 | claude/ui | Share: offer «this disruption» once route avoids it | accepted |
 | 2026-11-22 09:20 | junie/ui | Fixed detekt VariableNaming: renamed highlighted_ | accepted |
 | 2026-11-22 10:37 | claude/infra | README, architecture ADRs, agent skill, screenshots | pending |
+| 2026-11-22 11:24 | claude/shared | Re-plan options when the replay clock moves on | pending |
