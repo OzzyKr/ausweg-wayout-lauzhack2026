@@ -45,3 +45,6 @@ Outcome: `pending` → set by the human reviewer to `accepted` / `changed: why` 
 | 2026-11-22 06:50 | claude/ui | Language dropdown; dropped alerts subtitle | accepted |
 | 2026-11-22 07:03 | claude/shared | Share screen: edit stops, add changes, plainer copy | accepted |
 | 2026-11-22 06:53 | claude/shared | OJP trip texts in the UI language | accepted |
+| 2026-11-22 08:54 | junie/ui | Reduced panel corner radii for rectangular look | pending |
+| 2026-11-22 09:05 | junie/ui | Bigger whiter section titles, no background on leg chips | pending |
+| 2026-11-22 09:11 | junie/ui | Removed dot from From label, no circle on warning icon | pending |

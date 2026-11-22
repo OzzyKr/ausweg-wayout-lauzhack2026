@@ -55,7 +55,7 @@
   "options.error.network": "Serveur injoignable. Vérifiez votre connexion.",
   "plan.tagline": "Perturbation ? Dites-nous où vous êtes et où vous devez aller.",
   "plan.hero": "Votre chemin malgré les perturbations",
-  "plan.from": "De · vous êtes ici",
+  "plan.from": "De",
   "plan.to": "À",
   "plan.stop_hint": "Gare",
   "plan.swap": "Inverser départ et arrivée",

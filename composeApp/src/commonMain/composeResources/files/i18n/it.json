@@ -55,7 +55,7 @@
   "options.error.network": "Server non raggiungibile. Controlla la connessione.",
   "plan.tagline": "Perturbazione? Dicci dove sei e dove devi andare.",
   "plan.hero": "La tua strada nonostante le perturbazioni",
-  "plan.from": "Da · sei qui",
+  "plan.from": "Da",
   "plan.to": "A",
   "plan.stop_hint": "Stazione",
   "plan.swap": "Inverti partenza e arrivo",

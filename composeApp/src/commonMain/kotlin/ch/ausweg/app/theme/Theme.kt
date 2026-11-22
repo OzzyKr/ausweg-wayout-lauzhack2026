@@ -168,13 +168,13 @@ fun AuswegTheme(
                 Shapes(
                     small =
                         androidx.compose.foundation.shape
-                            .RoundedCornerShape(8.dp),
+                            .RoundedCornerShape(4.dp),
                     medium =
                         androidx.compose.foundation.shape
-                            .RoundedCornerShape(12.dp),
+                            .RoundedCornerShape(4.dp),
                     large =
                         androidx.compose.foundation.shape
-                            .RoundedCornerShape(16.dp),
+                            .RoundedCornerShape(8.dp),
                 ),
             content = content,
         )

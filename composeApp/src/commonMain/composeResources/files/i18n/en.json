@@ -55,7 +55,7 @@
   "options.error.network": "Can't reach the server. Check your connection.",
   "plan.tagline": "Disrupted? Tell us where you are and where you need to be.",
   "plan.hero": "Your way through train disruptions",
-  "plan.from": "From · you are here",
+  "plan.from": "From",
   "plan.to": "To",
   "plan.stop_hint": "Station",
   "plan.swap": "Swap from and to",

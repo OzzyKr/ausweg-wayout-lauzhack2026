@@ -74,7 +74,7 @@ fun AppCard(
     }
 }
 
-/** «OUR PICK», «FROM OTHER TRAVELLERS»: small caps label with an optional red action on the right. */
+/** «OUR PICK», «FROM OTHER TRAVELLERS»: bold label with an optional red action on the right. */
 @Composable
 fun SectionLabel(
     text: String,
@@ -86,8 +86,8 @@ fun SectionLabel(
         Text(
             text.uppercase(),
             Modifier.weight(1f),
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurface,
         )
         if (action != null) {
             TextButton(onAction) { Text(action, color = MaterialTheme.colorScheme.primary) }
