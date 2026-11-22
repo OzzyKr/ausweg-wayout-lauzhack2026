@@ -3,7 +3,9 @@ package ch.ausweg.shared.state
 import ch.ausweg.shared.api.AuswegApi
 import ch.ausweg.shared.api.attempt
 import ch.ausweg.shared.disruption.affects
+import ch.ausweg.shared.disruption.stopsTrain
 import ch.ausweg.shared.model.Disruption
+import ch.ausweg.shared.model.LegMode
 import ch.ausweg.shared.model.Location
 import ch.ausweg.shared.model.NewNote
 import ch.ausweg.shared.model.NewRoute
@@ -75,36 +77,45 @@ data class StopEdit(
  *
  * @property legs the rides of the route being shared: the suggested or taken trip at first, then as the user edits
  *   it (other stops, extra changes, line names).
+ * @property editingRoute the route's edit controls (other stops, extra changes, line names) are shown.
  * @property editing the open stop search, if any.
- * @property selectedChange the change (index into [strip]`.changes`) whose note is being edited.
- * @property notes note text per change index of [strip].
- * @property disruptionId the disruption the trip avoided, for «this disruption»; null if there's none.
+ * @property notes note text per change index of [strip]; a change with an entry (even empty) shows its tip field.
+ * @property disruption the disruption on this trip, for «this disruption»; null if there's none.
+ * @property throughDisruption the route still goes by train through [disruption]: «this disruption» is off until the
+ *   user edits it round the closure, or later travellers would be sent onto the closed line.
  */
 data class ShareUi(
     val legs: List<StripLeg> = emptyList(),
+    val editingRoute: Boolean = false,
     val editing: StopEdit? = null,
-    val selectedChange: Int? = null,
     val notes: Map<Int, String> = emptyMap(),
     val scope: ShareScope = ShareScope.ALWAYS,
-    val disruptionId: String? = null,
+    val disruption: Disruption? = null,
+    val throughDisruption: Boolean = false,
     val status: ShareStatus = ShareStatus.EDITING,
 ) {
+    val disruptionId: String? get() = disruption?.id
+
     /** Start, every change, end. */
     val stops: List<StopRef> get() = legs.firstOrNull()?.let { listOf(it.from) + legs.map { l -> l.to } }.orEmpty()
 
     /** The rides with their changes. */
     val strip: LegStrip get() = stripOf(legs, emptyList())
 
-    val canUseThisDisruption: Boolean get() = disruptionId != null
+    val canUseThisDisruption: Boolean get() = disruption != null && !throughDisruption
 
     /** A ride ends where it starts (the same stop twice in a row): the share screen says why it can't post. */
     val hasLoop: Boolean get() = legs.any { it.from.isSameStop(it.to) }
 
     val canAddChange: Boolean get() = legs.size < MAX_ROUTE_RIDES
 
+    /** The change (index into [strip]`.changes`) at stop [stop] of [stops]; null for the start, the end or no stop. */
+    fun changeAt(stop: Int): Int? = (stop - 1).takeIf { stop in 1 until stops.lastIndex }
+
     val canPost: Boolean
         get() =
             status != ShareStatus.POSTING &&
+                !editingRoute &&
                 editing == null &&
                 legs.size in 1..MAX_ROUTE_RIDES &&
                 !hasLoop &&
@@ -180,18 +191,24 @@ class ShareState(
     val ui: StateFlow<ShareUi> = _ui.asStateFlow()
     private var search: Job? = null
 
-    /** Starts sharing [legs]. With a [disruptionId], «this disruption» is preselected. */
+    /**
+     * Starts sharing [legs] on a trip hit by [disruption]. [throughDisruption] says whether [legs] still go through it
+     * (known best from the whole trip, so the caller tells); if not, «this disruption» is preselected.
+     */
     fun start(
         legs: List<StripLeg>,
-        disruptionId: String?,
+        disruption: Disruption?,
+        throughDisruption: Boolean = false,
     ) {
         search?.cancel()
-        _ui.value =
+        val ui =
             ShareUi(
                 legs = legs,
-                scope = if (disruptionId != null) ShareScope.THIS_DISRUPTION else ShareScope.ALWAYS,
-                disruptionId = disruptionId,
+                disruption = disruption,
+                throughDisruption =
+                    disruption != null && throughDisruption,
             )
+        _ui.value = ui.copy(scope = if (ui.canUseThisDisruption) ShareScope.THIS_DISRUPTION else ShareScope.ALWAYS)
     }
 
     /** Opens the stop search for [target] (an existing stop, or a new change), or closes it with null. */
@@ -252,16 +269,23 @@ class ShareState(
             legs = legs.mapIndexed { i, l -> if (i == leg) l.copy(label = line.take(LINE_MAX_LENGTH)) else l }
         }
         if (bus != null) legs = legs.withBus(leg, bus)
-        s.copy(legs = legs, status = ShareStatus.EDITING)
+        s.withLegs(legs).copy(status = ShareStatus.EDITING)
     }
 
-    fun selectChange(change: Int) = _ui.update { it.copy(selectedChange = change) }
+    /** Shows the route's edit controls, or hides them (and closes the stop search) with false. */
+    fun editRoute(on: Boolean) {
+        search?.cancel()
+        _ui.update { it.copy(editingRoute = on, editing = null) }
+    }
 
-    fun note(text: String) =
-        _ui.update { s ->
-            val change = s.selectedChange ?: return@update s
-            s.copy(notes = s.notes + (change to text.take(NOTE_MAX_LENGTH)))
-        }
+    /** The tip on [change] (index into [ShareUi.strip]`.changes`); «Add a tip» starts it empty. */
+    fun note(
+        change: Int,
+        text: String,
+    ) = _ui.update { s ->
+        val at = change.takeIf { it in s.strip.changes.indices } ?: return@update s
+        s.copy(notes = s.notes + (at to text.take(NOTE_MAX_LENGTH)))
+    }
 
     fun scope(scope: ShareScope) = _ui.update { it.copy(scope = scope) }
 
@@ -284,4 +308,19 @@ private fun ShareUi.withInput(change: (StopInput) -> StopInput): ShareUi =
 
 /** The changes moved, so notes pinned on them start over. */
 private fun ShareUi.routeChanged(legs: List<StripLeg>): ShareUi =
-    copy(legs = legs, editing = null, selectedChange = null, notes = emptyMap(), status = ShareStatus.EDITING)
+    withLegs(legs).copy(editing = null, notes = emptyMap(), status = ShareStatus.EDITING)
+
+/**
+ * The user edited the route to [legs]: does it still go by train through [ShareUi.disruption]? «This disruption» falls
+ * back to «always» when it does.
+ */
+private fun ShareUi.withLegs(legs: List<StripLeg>): ShareUi {
+    val d = disruption
+    val through = d != null && legs.any { it.mode == LegMode.RAIL && d.stopsTrain(it.from.didok, it.to.didok) }
+    val next = copy(legs = legs, throughDisruption = through)
+    return if (next.scope == ShareScope.THIS_DISRUPTION && !next.canUseThisDisruption) {
+        next.copy(scope = ShareScope.ALWAYS)
+    } else {
+        next
+    }
+}

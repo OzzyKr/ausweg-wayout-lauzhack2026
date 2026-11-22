@@ -39,6 +39,7 @@ class AuswegApp(
     val share = ShareState(api, scope)
     val trip = TripState(session, scope)
     val community = CommunityState(api, session, voting, scope)
+    val theme = ThemeState(settings)
 
     private val _language = MutableStateFlow(settings[SettingKeys.LANGUAGE])
 
@@ -117,27 +118,21 @@ class AuswegApp(
     }
 
     /**
-     * «Share yours»: shares the taken trip if there is one, else the current pick ([shareSource]). «This disruption»
-     * is offered when a disruption blocked the usual route and the shared route gets round it.
+     * «Share yours»: shares the taken trip if there is one, else the current pick ([shareSource]), on the disruption
+     * that blocked the usual route (or one the trip watches). «This disruption» is open once the route gets round it.
      */
     fun openShare() {
         val ready = options.ui.value as? OptionsUi.Ready
         val disruptions = session.disruptionsFor(ready?.response?.disruptions.orEmpty())
         val source = shareSource(trip.ui.value?.taken, ready?.view?.pick, disruptions) ?: return
-        val disruptionId =
-            if (source.avoidsDisruptions) {
-                ready
-                    ?.view
-                    ?.blockedBy
-                    ?.firstOrNull()
-                    ?.id
-                    ?: trip.ui.value
-                        ?.watched
-                        ?.firstOrNull { id -> disruptions.any { it.id == id } }
-            } else {
-                null
-            }
-        share.start(source.strip.legs, disruptionId)
+        val watched =
+            trip.ui.value
+                ?.watched
+                .orEmpty()
+        val disruption =
+            ready?.view?.blockedBy?.firstOrNull()
+                ?: disruptions.firstOrNull { it.id in watched }
+        share.start(source.strip.legs, disruption, throughDisruption = !source.avoidsDisruptions)
         navigator.push(Screen.Share)
     }
 

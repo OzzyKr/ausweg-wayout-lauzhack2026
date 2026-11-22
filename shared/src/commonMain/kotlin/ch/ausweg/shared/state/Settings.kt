@@ -37,6 +37,9 @@ object SettingKeys {
 
     /** This device's votes, target id → value (JSON), to highlight and take them back after a reload. */
     const val MY_VOTES = "myVotes"
+
+    /** The picked [ThemeMode] name; missing means follow the device. */
+    const val THEME = "theme"
 }
 
 private const val VOTER_ID_LENGTH = 16
