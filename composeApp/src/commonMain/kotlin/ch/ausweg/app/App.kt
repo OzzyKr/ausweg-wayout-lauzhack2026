@@ -1,5 +1,6 @@
 package ch.ausweg.app
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -31,7 +32,8 @@ fun App(
     val strings by produceState<Strings?>(null, language) {
         language?.let { value = loadStrings(it) }
     }
-    AuswegTheme {
+    val themeMode by app.theme.mode.collectAsState()
+    AuswegTheme(dark = themeMode.isDark(isSystemInDarkTheme())) {
         // Nothing but the theme's background until the first strings are in: no raw keys on the first frame.
         strings?.let {
             CompositionLocalProvider(LocalStrings provides it) {
