@@ -235,15 +235,15 @@ private fun RideRow(
 }
 
 /**
- * «Only during this disruption» / «Always», with one line saying what the selected one means. Without a disruption
- * there is nothing to choose: it's always.
+ * «Only during this disruption» / «Always», with one line saying what the selected one means. The choice shows when
+ * the trip has a disruption; «only during» is off while the route still goes by train through it.
  */
 @Composable
 private fun ScopeChoice(
     ui: ShareUi,
     share: ShareState,
 ) {
-    if (ui.canUseThisDisruption) {
+    if (ui.disruption != null) {
         val options =
             listOf(ShareScope.THIS_DISRUPTION to t("share.scope_this"), ShareScope.ALWAYS to t("share.scope_always"))
         SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
@@ -252,12 +252,17 @@ private fun ScopeChoice(
                     selected = ui.scope == scope,
                     onClick = { share.scope(scope) },
                     shape = SegmentedButtonDefaults.itemShape(i, options.size),
+                    enabled = scope == ShareScope.ALWAYS || ui.canUseThisDisruption,
                 ) { Text(label, maxLines = 2) }
             }
         }
     }
     Text(
-        if (ui.scope == ShareScope.THIS_DISRUPTION) t("share.scope_this_sub") else t("share.scope_always_sub"),
+        when {
+            ui.scope == ShareScope.THIS_DISRUPTION -> t("share.scope_this_sub")
+            ui.throughDisruption -> t("share.scope_this_through")
+            else -> t("share.scope_always_sub")
+        },
         Modifier.padding(top = 8.dp),
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,

@@ -14,6 +14,7 @@ import ch.ausweg.shared.model.LegMode
 import ch.ausweg.shared.model.Location
 import ch.ausweg.shared.model.Mode
 import ch.ausweg.shared.model.ReplacementBus
+import ch.ausweg.shared.model.Section
 import ch.ausweg.shared.model.StateResponse
 import ch.ausweg.shared.model.StopRef
 import ch.ausweg.shared.model.TimelineEntry
@@ -304,7 +305,7 @@ class StateTest {
                 ch.ausweg.shared.tips
                     .legStrip(Fx.viaYverdon("14:40", "15:50"))
                     .legs
-            share.start(legs, disruptionId = null)
+            share.start(legs, disruption = null)
             assertEquals(ShareScope.ALWAYS, share.ui.value.scope)
             share.scope(ShareScope.THIS_DISRUPTION)
             assertFalse(share.ui.value.canPost)
@@ -336,7 +337,7 @@ class StateTest {
             val yverdon = Location(StopRef("ch:1:sloid:4200", "Yverdon-les-Bains", Fx.YVERDON))
             val direct = StripLeg("R", StripKind.TRAIN, FakeApi.LAUSANNE, renens, departure = t("14:40"))
             val share = ShareState(api, backgroundScope)
-            share.start(listOf(direct), disruptionId = null)
+            share.start(listOf(direct), disruption = null)
 
             share.search(StopTarget.NewChange(0))
             assertFalse(share.ui.value.canPost, "not while the stop search is open")
@@ -378,7 +379,7 @@ class StateTest {
     fun shareEditModeAndTipsPerChange() =
         runTest {
             val share = ShareState(api, backgroundScope)
-            share.start(legStrip(Fx.viaYverdon("14:40", "15:50")).legs, disruptionId = null)
+            share.start(legStrip(Fx.viaYverdon("14:40", "15:50")).legs, disruption = null)
             val ui = share.ui.value
             assertEquals(listOf(null, 0, null), ui.stops.indices.map { ui.changeAt(it) })
             assertNull(ui.changeAt(9))
@@ -403,7 +404,7 @@ class StateTest {
     fun aRideCantEndWhereItStarts() =
         runTest {
             val share = ShareState(api, backgroundScope)
-            share.start(legStrip(Fx.viaYverdon("14:40", "15:50")).legs, disruptionId = null)
+            share.start(legStrip(Fx.viaYverdon("14:40", "15:50")).legs, disruption = null)
             share.search(StopTarget.Stop(1))
             share.chooseStop(Location(FakeApi.LAUSANNE))
             assertTrue(share.ui.value.hasLoop)
@@ -456,7 +457,36 @@ class StateTest {
             assertIs<Pick.Wait>(assertIs<OptionsUi.Ready>(app.options.ui.value).view.pick)
             app.openShare()
             assertEquals(ShareScope.ALWAYS, app.share.ui.value.scope)
-            assertFalse(app.share.ui.value.canUseThisDisruption)
+            assertEquals(fire.id, app.share.ui.value.disruptionId, "the choice is shown")
+            assertFalse(app.share.ui.value.canUseThisDisruption, "but off: the route goes through the closure")
+        }
+
+    @Test
+    fun thisDisruptionOpensOnceTheRouteGetsRoundIt() =
+        runTest {
+            val line = listOf(Fx.LAUSANNE, Fx.PUIDOUX, Fx.PALEZIEUX, Fx.VAUDERENS, Fx.ROMONT, Fx.FRIBOURG)
+            val closed = fire.copy(sections = listOf(Section(Fx.PUIDOUX, Fx.VAUDERENS, line)))
+            val fribourg = StopRef("8504100", "Fribourg/Freiburg", Fx.FRIBOURG)
+            val ic = StripLeg("IC1", StripKind.TRAIN, FakeApi.LAUSANNE, fribourg)
+            val share = ShareState(api, backgroundScope)
+            share.start(listOf(ic), closed, throughDisruption = true)
+            assertEquals(ShareScope.ALWAYS, share.ui.value.scope)
+            assertFalse(share.ui.value.canUseThisDisruption)
+
+            share.ride(0, bus = true)
+            assertTrue(share.ui.value.canUseThisDisruption, "a road bus isn't on the closed line")
+            share.scope(ShareScope.THIS_DISRUPTION)
+            share.ride(0, bus = false)
+            assertFalse(share.ui.value.canUseThisDisruption)
+            assertEquals(ShareScope.ALWAYS, share.ui.value.scope, "falls back to always")
+
+            share.search(StopTarget.NewChange(0))
+            share.chooseStop(Location(StopRef("ch:1:sloid:4200", "Yverdon-les-Bains", Fx.YVERDON)))
+            assertTrue(share.ui.value.canUseThisDisruption, "the detour via Yverdon gets round it")
+            share.scope(ShareScope.THIS_DISRUPTION)
+            share.post()
+            runCurrent()
+            assertEquals(closed.id, api.posted.single().disruptionId)
         }
 
     @Test

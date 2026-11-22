@@ -167,6 +167,7 @@
   "share.note_limit": "Höchstens {n} Zeichen. Keine Namen oder Telefonnummern.",
   "share.scope_this": "Nur während dieser Störung",
   "share.scope_this_sub": "Wird gezeigt, wenn dieser Abschnitt wieder gesperrt ist",
+  "share.scope_this_through": "Wird allen gezeigt, die diese Strecke fahren. Ihre Route führt noch durch den gesperrten Abschnitt: Bearbeiten Sie sie, um sie nur während dieser Störung zu zeigen.",
   "share.scope_always": "Immer",
   "share.scope_always_sub": "Wird allen gezeigt, die diese Strecke fahren",
   "share.post": "Teilen",

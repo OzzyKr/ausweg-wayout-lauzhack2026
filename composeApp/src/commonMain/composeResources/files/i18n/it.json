@@ -167,6 +167,7 @@
   "share.note_limit": "Massimo {n} caratteri. Niente nomi o numeri di telefono.",
   "share.scope_this": "Solo durante questa perturbazione",
   "share.scope_this_sub": "Mostrato quando questa tratta è di nuovo chiusa",
+  "share.scope_this_through": "Mostrato a chi fa questo viaggio. Il tuo percorso passa ancora per la tratta chiusa: modificalo per mostrarlo solo durante questa perturbazione.",
   "share.scope_always": "Sempre",
   "share.scope_always_sub": "Mostrato a chi fa questo viaggio",
   "share.post": "Condividi",

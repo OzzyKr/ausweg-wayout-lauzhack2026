@@ -167,6 +167,7 @@
   "share.note_limit": "{n} caractères max. Pas de noms ni de numéros de téléphone.",
   "share.scope_this": "Seulement pendant cette perturbation",
   "share.scope_this_sub": "Affiché quand ce tronçon est de nouveau fermé",
+  "share.scope_this_through": "Affiché à tous ceux qui font ce trajet. Votre trajet passe encore par le tronçon fermé : modifiez-le pour l'afficher seulement pendant cette perturbation.",
   "share.scope_always": "Toujours",
   "share.scope_always_sub": "Affiché à tous ceux qui font ce trajet",
   "share.post": "Partager",

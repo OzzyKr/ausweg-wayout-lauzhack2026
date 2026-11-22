@@ -14,6 +14,7 @@ import ch.ausweg.shared.model.CallTime
 import ch.ausweg.shared.model.DisruptionHints
 import ch.ausweg.shared.model.DisruptionStatus
 import ch.ausweg.shared.model.LegMode
+import ch.ausweg.shared.model.Section
 import ch.ausweg.shared.model.TripImpact
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -21,6 +22,17 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class MatchingTest {
+    @Test
+    fun aSharedRideIsMatchedByItsStopsAlone() {
+        val line = listOf(LAUSANNE, PUIDOUX, PALEZIEUX, VAUDERENS, ROMONT, FRIBOURG)
+        val closed = fire.copy(sections = listOf(Section(PUIDOUX, VAUDERENS, line)))
+        assertTrue(closed.stopsTrain(LAUSANNE, FRIBOURG), "non-stop along the line through the section")
+        assertTrue(fire.stopsTrain(VAUDERENS, PUIDOUX), "both ends, either direction")
+        assertFalse(closed.stopsTrain(LAUSANNE, PUIDOUX), "only touches the section's end")
+        assertFalse(closed.stopsTrain(LAUSANNE, Fx.YVERDON))
+        assertFalse(fire.copy(hints = emptyList()).stopsTrain(PUIDOUX, VAUDERENS), "not blocking")
+    }
+
     @Test
     fun tripThroughClosedSectionIsBlocked() {
         val impact = affects(Fx.ic1, listOf(fire))
