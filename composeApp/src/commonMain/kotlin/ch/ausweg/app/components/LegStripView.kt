@@ -3,7 +3,6 @@ package ch.ausweg.app.components
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -31,9 +30,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ch.ausweg.app.i18n.t
-import ch.ausweg.app.resources.Res
-import ch.ausweg.app.resources.ic_add
-import ch.ausweg.app.resources.ic_edit
 import ch.ausweg.app.theme.Extra
 import ch.ausweg.shared.tips.LegStrip
 import ch.ausweg.shared.tips.StripKind
@@ -47,40 +43,18 @@ private const val DEFAULT_WEIGHT = 30f
  * dotted connectors for changes, numbered red badges for notes pinned on a change.
  *
  * @param highlight ride drawn in red (the one the traveller is on).
- * @param editChange when set, every change is a button (share screen); [selectedChange] is drawn as selected and
- *   [noted] changes show a pencil.
  */
 @Composable
 fun LegStripView(
     strip: LegStrip,
     modifier: Modifier = Modifier,
     highlight: Int? = null,
-    editChange: ((Int) -> Unit)? = null,
-    selectedChange: Int? = null,
-    noted: Set<Int> = emptySet(),
 ) {
-    Row(
-        modifier.fillMaxWidth().height(
-            if (editChange !=
-                null
-            ) {
-                44.dp
-            } else {
-                30.dp
-            },
-        ),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
+    Row(modifier.fillMaxWidth().height(30.dp), verticalAlignment = Alignment.CenterVertically) {
         strip.legs.forEachIndexed { i, leg ->
             LegChip(leg, i == highlight, Modifier.weight(maxOf(leg.minutes?.toFloat() ?: DEFAULT_WEIGHT, MIN_WEIGHT)))
             val change = strip.changes.getOrNull(i)
-            if (change != null) {
-                if (editChange != null) {
-                    ChangeButton(i == selectedChange, i in noted) { editChange(i) }
-                } else {
-                    Connector(change.notes.map { it.number })
-                }
-            }
+            if (change != null) Connector(change.notes.map { it.number })
         }
     }
 }
@@ -160,45 +134,6 @@ private fun Connector(numbers: List<Int>) {
 fun NoteBadge(number: Int) {
     Box(Modifier.size(18.dp).background(Extra.colors.brand, CircleShape), contentAlignment = Alignment.Center) {
         Text("$number", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-    }
-}
-
-/** A change on the share screen: «+» to add a note, a pencil when it has one, red ring when selected. */
-@Composable
-private fun ChangeButton(
-    selected: Boolean,
-    hasNote: Boolean,
-    onClick: () -> Unit,
-) {
-    val red = Extra.colors.brand
-    val outline = MaterialTheme.colorScheme.onSurfaceVariant
-    Box(
-        Modifier
-            .padding(horizontal = 4.dp)
-            .size(40.dp)
-            .background(if (selected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent, CircleShape)
-            .then(
-                if (selected) {
-                    Modifier.border(2.dp, red, CircleShape)
-                } else {
-                    Modifier.drawBehind {
-                        drawCircle(
-                            outline,
-                            radius = size.minDimension / 2 - 1.dp.toPx(),
-                            style =
-                                Stroke(1.5.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 5f))),
-                        )
-                    }
-                },
-            ).clickable(onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        Ic(
-            if (hasNote || selected) Res.drawable.ic_edit else Res.drawable.ic_add,
-            t("share.add_note"),
-            tint = if (selected) red else outline,
-            size = 18,
-        )
     }
 }
 
