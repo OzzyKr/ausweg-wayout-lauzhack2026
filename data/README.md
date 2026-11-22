@@ -72,7 +72,7 @@ Bonus : à 20:38, quelqu'un en gare écrit au TCC « écrivez si c'est le chaos 
 ## Format d'un scénario (`scenarios/*.events.json`)
 C'est le contrat avec le backend (C) et le code partagé (A) : tout changement se discute avec le lead. `validate.py` vérifie ce format.
 
-**`incident`** : `id` (id VIA), `kultId`, `title`, `line`, `lineStations` (toutes les gares de la ligne, dans l'ordre), `otherStations` (optionnel : gares hors de la ligne citées dans les événements, ex. un embranchement), `stationIds` (numéro DIDOK de chaque gare de `lineStations` et `otherStations`, ex. `"Morges": 8501037` : c'est le même numéro que `StopRef.didok` côté OJP et que les colonnes VIA `stoerungs_ort*`, donc **le croisement trajet × perturbation se fait sur ce numéro**, pas sur le nom), `lines` (IC1, R8…), `replayStart`, `replayEnd`.
+**`incident`** : `id` (id VIA), `kultId`, `title`, `line`, `lineStations` (toutes les gares de la ligne, dans l'ordre), `otherStations` (optionnel : gares hors de la ligne citées dans les événements, ex. un embranchement), `stationIds` (numéro DIDOK de chaque gare de `lineStations` et `otherStations`, ex. `"Morges": 8501037` : c'est le même numéro que `StopRef.didok` côté OJP et que les colonnes VIA `stoerungs_ort*`, donc **le croisement trajet × perturbation se fait sur ce numéro**, pas sur le nom), `lines` (IC1, R8…), `replayStart`, `replayEnd`, `titles` (optionnel : `title` traduit, `{"en": …, "de": …, "it": …}`).
 
 **Noms de gares** : toujours le nom officiel SBB, identique à OJP (vérifié avec `https://transport.opendata.ch/v1/locations?query=…`, mêmes numéros que les colonnes VIA `stoerungs_ort*`), ex. `Romont FR`, `Fribourg/Freiburg`. `lineStations` vient de la liste d'arrêts d'un train omnibus (Puidoux : S41 ; Renens : R9 + RE33 + RL2). Dans `sections`, `bus` et `bus.routes`, chaque gare doit être dans `lineStations` ou `otherStations` (`validate.py` le vérifie). Les `summary` peuvent utiliser les noms courts.
 
@@ -83,6 +83,7 @@ C'est le contrat avec le backend (C) et le code partagé (A) : tout changement s
 | `source` | oui | `VIA` \| `INTERNAL` \| `PUBLIC` |
 | `kind` | oui | `DETECTED` \| `CAUSE` \| `INTERRUPTION` \| `RESTRICTION` \| `SCOPE_CHANGE` \| `PROGNOSIS` \| `SEVERITY_UP` \| `REPLACEMENT_BUS` \| `RESTORATION` \| `INFO` \| `ENDED` |
 | `summary` | oui | Phrase claire en français pour le voyageur |
+| `summaries` | non | `summary` traduit, `{"en": …, "de": …, "it": …}` : l'app affiche la langue choisie, sinon le français |
 | `raw` | oui | Texte d'origine (ou nom de la colonne VIA), pour vérifier. Jamais envoyé à l'app |
 | `sections` | non | Liste non vide de `{from, to}` : tronçons touchés (ex. Puidoux – Vauderens **et** Puidoux – Lucens). Une seule entrée si le texte ne cite qu'un tronçon |
 | `expectedEnd` | non | `{time, type}`, `type` = `APPROX` \| `AT_LEAST` \| `UNKNOWN` ; `time` = `null` seulement si `UNKNOWN` |

@@ -40,6 +40,7 @@ import ch.ausweg.shared.model.Advice
 import ch.ausweg.shared.model.Disruption
 import ch.ausweg.shared.model.DisruptionStatus
 import ch.ausweg.shared.model.TimelineEntry
+import ch.ausweg.shared.model.summary
 import kotlin.time.Instant
 
 /** The disruption's title in its published language (never translated), or a generic label. */
@@ -199,7 +200,7 @@ fun TimelineList(
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
                         Text(
-                            e.summary,
+                            e.summary(strings().language),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = if (first) FontWeight.SemiBold else FontWeight.Normal,
                         )

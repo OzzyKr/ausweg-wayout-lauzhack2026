@@ -12,7 +12,7 @@ import ch.ausweg.shared.model.StopRef
 import ch.ausweg.shared.model.TimelineEntry
 import kotlin.time.Instant
 
-/** Language of the scenario `summary` texts. */
+/** Language of the scenario `title` and `summary` texts; `titles` and `summaries` hold the others. */
 internal const val SCENARIO_LANGUAGE = "fr"
 
 /**
@@ -58,7 +58,7 @@ internal class ScenarioFolder(
                 apply(event)
                 DisruptionUpdate(snapshot(version = i + 1, event))
             }
-        val timeline = sorted.map { TimelineEntry(incident.id, it.t, it.source, it.kind, it.summary) }
+        val timeline = sorted.map { TimelineEntry(incident.id, it.t, it.source, it.kind, it.summary, it.texts()) }
         val stations = incident.stationIds.map { (name, didok) -> StopRef(didok.toString(), name, didok) }
         return DisruptionData(updates, listOf(scenario()), timeline, stations)
     }
@@ -114,7 +114,7 @@ internal class ScenarioFolder(
         affectedStops = sections.flatMap { listOf(it.from, it.to) }.distinct(),
         lines = incident.lines,
         expectedEnd = expectedEnd,
-        texts = mapOf(SCENARIO_LANGUAGE to DisruptionText(incident.title, event.summary)),
+        texts = event.texts().mapValues { (lang, body) -> DisruptionText(incident.title(lang), body) },
         hints =
             listOfNotNull(
                 DisruptionHints.LINE_CLOSED.takeIf { closed },
@@ -129,6 +129,7 @@ internal class ScenarioFolder(
         Scenario(
             id = scenarioId,
             title = incident.title,
+            titles = incident.titles + (SCENARIO_LANGUAGE to incident.title),
             start = incident.replayStart,
             end = incident.replayEnd,
             disruptionIds = listOf(incident.id),
@@ -137,6 +138,11 @@ internal class ScenarioFolder(
             suggestedFromName = incident.suggestedFrom ?: incident.lineStations.firstOrNull(),
             suggestedToName = incident.suggestedTo ?: incident.lineStations.lastOrNull(),
         )
+
+    /** The summary in every language the file has, the original included. */
+    private fun ScenarioEvent.texts(): Map<String, String> = summaries + (SCENARIO_LANGUAGE to summary)
+
+    private fun Incident.title(language: String): String = titles[language] ?: title
 
     private fun didok(name: String?): Int? =
         name?.let { n -> incident.stationIds[n].also { if (it == null) onUnknownStation(n) } }
