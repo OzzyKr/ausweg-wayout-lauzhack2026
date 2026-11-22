@@ -40,6 +40,7 @@ class FakeApi : AuswegApi {
     var routes: List<RankedRoute> = listOf(ROUTE)
     var tips: List<RankedTip> = listOf(TIP)
     val posted = mutableListOf<NewRoute>()
+    var voteError: Throwable? = null
     var failPost = false
 
     suspend fun emit(event: ServerEvent) = events.emit(event)
@@ -94,6 +95,7 @@ class FakeApi : AuswegApi {
         vote: VoteRequest,
     ): Tip {
         calls += "voteTip $id ${vote.value}"
+        voteError?.let { throw it }
         return TIP.tip.copy(votes = TIP.tip.votes.copy(up = TIP.tip.votes.up + 1))
     }
 

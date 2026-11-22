@@ -33,6 +33,19 @@ class CommunityStoreTest {
     }
 
     @Test
+    fun `a voter can take their vote back`() {
+        val store = CommunityStore.inMemory()
+        store.addTip(tip("t1"))
+        store.vote("t1", "device-a", VoteValue.UP)
+        store.vote("t1", "device-b", VoteValue.UP)
+        assertTrue(store.vote("t1", "device-a", null))
+        assertEquals(Votes(up = 1), store.tips().single().votes)
+        assertTrue(store.vote("t1", "device-a", null), "nothing to take back is fine")
+        assertEquals(Votes(up = 1), store.tips().single().votes)
+        assertFalse(store.vote("nope", "device-a", null))
+    }
+
+    @Test
     fun `voting on or endorsing an unknown id fails`() {
         val store = CommunityStore.inMemory()
         assertFalse(store.vote("nope", "device-a", VoteValue.UP))

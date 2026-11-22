@@ -232,9 +232,21 @@ class StateTest {
                 app.route.ui.value
                     ?.myVote,
             )
-            app.route.vote(VoteValue.UP) // a repeat is not sent
+            app.route.vote(VoteValue.UP) // the same vote again takes it back
             runCurrent()
-            assertEquals(1, api.calls.count { it.startsWith("voteRoute") })
+            assertEquals(2, api.calls.count { it.startsWith("voteRoute") })
+            assertTrue(api.calls.last().startsWith("voteRoute r1 null"))
+            assertNull(
+                app.route.ui.value
+                    ?.myVote,
+            )
+            app.route.vote(VoteValue.UP)
+            runCurrent()
+            assertEquals(
+                VoteValue.UP,
+                app.route.ui.value
+                    ?.myVote,
+            )
 
             app.takeRoute()
             runCurrent()

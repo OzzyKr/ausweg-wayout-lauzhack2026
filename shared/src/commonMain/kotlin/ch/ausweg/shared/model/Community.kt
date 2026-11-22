@@ -147,9 +147,12 @@ data class NewRoute(
     val notes: List<NewNote> = emptyList(),
 )
 
-/** `POST /tips/{id}/vote`, `POST /routes/{id}/vote`. [voterId]: a random id the device keeps. */
+/**
+ * `POST /tips/{id}/vote`, `POST /routes/{id}/vote`. [voterId]: a random id the device keeps. [value] null takes the
+ * voter's vote back.
+ */
 @Serializable
 data class VoteRequest(
     val voterId: String,
-    val value: VoteValue,
+    val value: VoteValue? = null,
 )

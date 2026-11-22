@@ -74,22 +74,28 @@ class CommunityStore private constructor(
         seedVotes(route.id, route.votes)
     }
 
-    /** Records [voterId]'s vote on a tip or route, replacing an earlier one. False if [targetId] doesn't exist. */
+    /**
+     * Records [voterId]'s vote on a tip or route, replacing an earlier one; a null [value] takes their vote back.
+     * False if [targetId] doesn't exist.
+     */
     @Synchronized
     fun vote(
         targetId: String,
         voterId: String,
-        value: VoteValue,
+        value: VoteValue?,
     ): Boolean {
         val exists = TABLES.any { db.query("SELECT id FROM $it WHERE id = ?", targetId) { true }.isNotEmpty() }
-        if (exists) {
-            db.update(
-                "INSERT INTO votes (target_id, voter_id, value) VALUES (?, ?, ?) " +
-                    "ON CONFLICT (target_id, voter_id) DO UPDATE SET value = excluded.value",
-                targetId,
-                voterId,
-                value.name,
-            )
+        when {
+            !exists -> Unit
+            value == null -> db.update("DELETE FROM votes WHERE target_id = ? AND voter_id = ?", targetId, voterId)
+            else ->
+                db.update(
+                    "INSERT INTO votes (target_id, voter_id, value) VALUES (?, ?, ?) " +
+                        "ON CONFLICT (target_id, voter_id) DO UPDATE SET value = excluded.value",
+                    targetId,
+                    voterId,
+                    value.name,
+                )
         }
         return exists
     }

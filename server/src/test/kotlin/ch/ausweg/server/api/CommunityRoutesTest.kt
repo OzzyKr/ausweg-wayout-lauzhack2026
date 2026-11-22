@@ -127,6 +127,8 @@ class CommunityRoutesTest {
             postJson("/tips/seed-tip-fribourg-2-1/vote", vote)
             val tip = postJson("/tips/seed-tip-fribourg-2-1/vote", vote).decode<Tip>()
             assertEquals(Votes(up = 4), tip.votes)
+            val back = postJson("/tips/seed-tip-fribourg-2-1/vote", """{"voterId":"device-1"}""").decode<Tip>()
+            assertEquals(Votes(up = 3), back.votes, "no value takes the vote back")
             assertEquals(HttpStatusCode.NotFound, postJson("/tips/nope/vote", vote).status)
             assertEquals(
                 HttpStatusCode.BadRequest,

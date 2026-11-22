@@ -33,7 +33,7 @@ class AuswegApp(
 ) {
     val session = AppSession(api, scope)
     val navigator = Navigator()
-    val voting = Voting(api, settings.voterId())
+    val voting = Voting(api, settings)
     val plan = PlanState(api, scope)
     val options = OptionsState(api, session, scope)
     val route = RouteState(voting, scope)
