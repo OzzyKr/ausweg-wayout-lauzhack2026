@@ -67,22 +67,16 @@ private fun LegChip(
 ) {
     val c = Extra.colors
     val shape = RoundedCornerShape(6.dp)
-    val bg =
-        when {
-            highlighted -> c.brand
-            leg.kind == StripKind.TRAIN || leg.kind == StripKind.OTHER -> c.chip
-            else -> Color.Transparent
-        }
-    val fg = if (bg == Color.Transparent) MaterialTheme.colorScheme.onSurface else c.onChip
+    val highlightedTrain = highlighted && leg.kind == StripKind.TRAIN
+    val fg = if (highlightedTrain) c.onChip else MaterialTheme.colorScheme.onSurface
     val outline = MaterialTheme.colorScheme.onSurface
     val label = rideLabel(leg)
     Box(
         modifier
-            .height(28.dp)
-            .background(bg, shape)
+            .height(30.dp)
             .then(
                 when {
-                    highlighted -> Modifier
+                    highlightedTrain -> Modifier.background(c.brand, shape).padding(horizontal = 8.dp)
                     leg.kind == StripKind.REPLACEMENT_BUS ->
                         Modifier.drawBehind {
                             drawRoundRect(
@@ -104,8 +98,8 @@ private fun LegChip(
         Text(
             label,
             color = fg,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold,
             maxLines = 1,
             overflow = TextOverflow.Clip,
             textDecoration = if (leg.cancelled) androidx.compose.ui.text.style.TextDecoration.LineThrough else null,
@@ -117,7 +111,7 @@ private fun LegChip(
 @Composable
 private fun Connector(numbers: List<Int>) {
     val dots = MaterialTheme.colorScheme.onSurfaceVariant
-    Box(Modifier.width(if (numbers.isEmpty()) 18.dp else 26.dp).height(28.dp), contentAlignment = Alignment.Center) {
+    Box(Modifier.width(if (numbers.isEmpty()) 18.dp else 26.dp).height(30.dp), contentAlignment = Alignment.Center) {
         Canvas(Modifier.fillMaxWidth().height(2.dp)) {
             drawLine(
                 dots,

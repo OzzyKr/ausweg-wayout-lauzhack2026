@@ -60,22 +60,12 @@ fun DisruptionCard(
     val ended = d.status == DisruptionStatus.ENDED
     AppCard(modifier) {
         Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Box(
-                Modifier
-                    .size(36.dp)
-                    .background(
-                        if (d.isBlocking && !ended) Extra.colors.warning else MaterialTheme.colorScheme.surfaceVariant,
-                        CircleShape,
-                    ),
-                contentAlignment = Alignment.Center,
-            ) {
-                Ic(
-                    Res.drawable.ic_warning,
-                    null,
-                    tint = if (d.isBlocking && !ended) Extra.colors.brand else MaterialTheme.colorScheme.onSurface,
-                    size = 20,
-                )
-            }
+            Ic(
+                Res.drawable.ic_warning,
+                null,
+                tint = if (d.isBlocking && !ended) Extra.colors.brand else MaterialTheme.colorScheme.onSurface,
+                size = 20,
+            )
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(disruptionTitle(d), style = MaterialTheme.typography.titleSmall)
                 val body = text?.body.orEmpty()

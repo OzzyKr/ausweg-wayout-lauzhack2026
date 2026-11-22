@@ -55,7 +55,7 @@
   "options.error.network": "Server nicht erreichbar. Prüfen Sie Ihre Verbindung.",
   "plan.tagline": "Störung? Sagen Sie uns, wo Sie sind und wohin Sie müssen.",
   "plan.hero": "Ihr Weg trotz Zugstörungen",
-  "plan.from": "Von · Sie sind hier",
+  "plan.from": "Von",
   "plan.to": "Nach",
   "plan.stop_hint": "Bahnhof",
   "plan.swap": "Start und Ziel tauschen",
