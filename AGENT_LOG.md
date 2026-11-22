@@ -42,3 +42,4 @@ Outcome: `pending` → set by the human reviewer to `accepted` / `changed: why` 
 | 2026-11-21 23:28 | claude/shared | Wait card shows first train after reopening | accepted |
 | 2026-11-21 23:16 | claude/server | CORS: allow SSE headers so web gets /events | accepted |
 | 2026-11-22 06:57 | claude/shared | Tap your vote again to take it back | pending |
+| 2026-11-22 07:03 | claude/shared | Share screen: edit stops, add changes, plainer copy | pending |

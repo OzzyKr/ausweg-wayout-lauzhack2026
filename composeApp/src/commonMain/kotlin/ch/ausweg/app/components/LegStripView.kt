@@ -101,7 +101,7 @@ private fun LegChip(
         }
     val fg = if (bg == Color.Transparent) MaterialTheme.colorScheme.onSurface else c.onChip
     val outline = MaterialTheme.colorScheme.onSurface
-    val label = leg.label ?: if (leg.kind == StripKind.OTHER) "·" else t("strip.bus")
+    val label = rideLabel(leg)
     Box(
         modifier
             .height(28.dp)
@@ -239,3 +239,12 @@ fun StripStations(
         Text(to.name, style = style, color = muted, maxLines = 1)
     }
 }
+
+/** The line on a ride's chip, or «Train» / «Bus» when it has none (a shared ride the user didn't name). */
+@Composable
+fun rideLabel(leg: StripLeg): String =
+    leg.label?.takeIf { it.isNotBlank() } ?: when (leg.kind) {
+        StripKind.OTHER -> "·"
+        StripKind.TRAIN -> t("strip.train")
+        StripKind.BUS, StripKind.REPLACEMENT_BUS -> t("strip.bus")
+    }
