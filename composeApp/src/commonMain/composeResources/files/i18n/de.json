@@ -77,6 +77,8 @@
   "mode.selected": "Ausgewählt",
   "mode.live_chip": "Live",
   "mode.replay_chip": "Replay",
+  "theme.to_dark": "Zum dunklen Design wechseln",
+  "theme.to_light": "Zum hellen Design wechseln",
   "replay.label": "Replay-Modus",
   "replay.when": "{date} · {time}",
   "replay.play": "Abspielen",

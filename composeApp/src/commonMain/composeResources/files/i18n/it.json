@@ -77,6 +77,8 @@
   "mode.selected": "Selezionato",
   "mode.live_chip": "Diretta",
   "mode.replay_chip": "Replay",
+  "theme.to_dark": "Passa al tema scuro",
+  "theme.to_light": "Passa al tema chiaro",
   "replay.label": "Modalità replay",
   "replay.when": "{date} · {time}",
   "replay.play": "Riproduci",

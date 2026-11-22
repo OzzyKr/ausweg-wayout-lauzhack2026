@@ -43,7 +43,8 @@ Outcome: `pending` → set by the human reviewer to `accepted` / `changed: why` 
 | 2026-11-21 23:16 | claude/server | CORS: allow SSE headers so web gets /events | accepted |
 | 2026-11-22 06:57 | claude/shared | Tap your vote again to take it back | accepted |
 | 2026-11-22 06:50 | claude/ui | Language dropdown; dropped alerts subtitle | accepted |
-| 2026-11-22 07:03 | claude/shared | Share screen: edit stops, add changes, plainer copy | accepted |
 | 2026-11-22 06:53 | claude/shared | OJP trip texts in the UI language | accepted |
-| 2026-11-22 09:05 | claude/ui | Simpler share screen, working scope choice | pending |
-| 2026-11-22 09:13 | claude/ui | Share: offer «this disruption» once route avoids it | pending |
+| 2026-11-22 07:03 | claude/shared | Share screen: edit stops, add changes, plainer copy | accepted |
+| 2026-11-22 08:38 | claude/ui | Light/dark switch in the header, saved | accepted |
+| 2026-11-22 09:05 | claude/ui | Simpler share screen, working scope choice | accepted |
+| 2026-11-22 09:13 | claude/ui | Share: offer «this disruption» once route avoids it | accepted |
