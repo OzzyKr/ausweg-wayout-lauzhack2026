@@ -124,6 +124,21 @@ class LiveSituationsTest {
     }
 
     @Test
+    fun translatedTextsAreAddedButNotRead() {
+        val german = situation("Der Bahnverkehr zwischen Aarau und Olten ist unterbrochen.")
+        val d = assertNotNull(german.toDisruption(evening))
+        val french = german.copy(summary = "Trafic perturbé.", language = "fr")
+        val unknown = german.copy(id = "other", summary = "Autre", language = "fr")
+        val noLanguage = german.copy(summary = "Ohne Sprache", language = null)
+
+        val shown = withTextsOf(listOf(d), listOf(french, unknown, noLanguage)).single()
+        assertEquals(setOf("de", "fr"), shown.texts.keys)
+        assertEquals("Trafic perturbé.", shown.texts["fr"]?.title)
+        assertEquals(d.texts["de"], shown.texts["de"])
+        assertEquals(d.copy(texts = shown.texts), shown, "sections, hints and status stay as read in German")
+    }
+
+    @Test
     fun busAndNoAlternativeKeywords() {
         listOf("Bahnersatz mit Bussen", "Bus de remplacement", "Bus sostitutivi", "Replacement buses run").forEach {
             assertEquals(listOf(DisruptionHints.REPLACEMENT_BUS), situation(it).toDisruption(evening)?.hints, it)

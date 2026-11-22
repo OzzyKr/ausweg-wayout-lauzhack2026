@@ -61,6 +61,22 @@ fun Situation.toDisruption(now: Instant): Disruption? {
     )
 }
 
+/**
+ * [disruptions] with the texts of [translated] (the same OJP situations, asked in another language) added under
+ * that language, so the app can show them in the UI language. Only texts change: sections, hints and status stay as
+ * read from the German answer. Situations without a language are skipped. Pure.
+ */
+fun withTextsOf(
+    disruptions: List<Disruption>,
+    translated: List<Situation>,
+): List<Disruption> {
+    val byId =
+        translated
+            .mapNotNull { s -> s.language?.let { OJP_DISRUPTION_PREFIX + s.id to (it to s.texts()) } }
+            .toMap()
+    return disruptions.map { d -> byId[d.id]?.let { d.copy(texts = d.texts + it) } ?: d }
+}
+
 /** Where a moment falls in [Situation.validity]: [end] of the window it is in (null: open), or after the last one. */
 private class Phase(
     val ended: Boolean,

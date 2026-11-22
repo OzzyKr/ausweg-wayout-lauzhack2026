@@ -13,6 +13,7 @@ import ch.ausweg.server.ojp.OjpTransport
 import ch.ausweg.server.ojp.OjpUnavailable
 import ch.ausweg.shared.model.Location
 import ch.ausweg.shared.model.PlanResponse
+import ch.ausweg.shared.model.Section
 import ch.ausweg.shared.model.TripSource
 import io.ktor.client.request.get
 import io.ktor.client.request.post
@@ -29,6 +30,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlin.time.Duration
+
+private const val FR_PLAN = """{"from":"8501120","to":"8504100","language":"fr"}"""
 
 class PlanRoutesTest {
     private val wall = FakeWall(instant("2026-11-21T17:00:00Z"))
@@ -213,9 +216,65 @@ class PlanRoutesTest {
             assertEquals(listOf("ojp:sit-night"), res.disruptions.map { it.id })
         }
 
+    /** Live OJP with the Puidoux – Vauderens closure, its summary in German or, when asked, in French. */
+    private fun bilingualOjp(asked: MutableList<String>) =
+        OjpTransport { xml ->
+            asked += xml
+            val german =
+                OjpXml.situation(
+                    "sit-1",
+                    "Der Bahnverkehr zwischen Puidoux und Vauderens ist unterbrochen.",
+                    "2026-11-21T16:00:00Z",
+                    "2026-11-21T20:00:00Z",
+                    8504012,
+                    8504021,
+                )
+            val situation =
+                if (xml.contains("<siri:Language>fr</siri:Language>")) {
+                    german
+                        .replace("xml:lang=\"DE\"", "xml:lang=\"FR\"")
+                        .replace(
+                            "Der Bahnverkehr zwischen Puidoux und Vauderens ist unterbrochen.",
+                            "Trafic interrompu.",
+                        )
+                } else {
+                    german
+                }
+            if (xml.contains("<Via>")) {
+                OjpXml.response(OjpXml.viaYverdon("2026-11-21T17:10:00Z", "2026-11-21T18:35:00Z"))
+            } else {
+                OjpXml.responseWithSituations(
+                    listOf(situation),
+                    OjpXml.direct("2026-11-21T17:15:00Z", "2026-11-21T18:00:00Z"),
+                )
+            }
+        }
+
     @Test
-    fun `the UI language goes to OJP`() {
+    fun `situations are read in German and shown in the UI language`() {
         val asked = mutableListOf<String>()
+        withApp(transport = bilingualOjp(asked)) {
+            val res = AuswegJson.decodeFromString<PlanResponse>(plan(FR_PLAN).bodyAsText())
+            val closure = res.disruptions.single { it.id == "ojp:sit-1" }
+            // Read from the German text: the French one names no section and no closure keyword.
+            assertEquals(listOf(Section(8504012, 8504021)), closure.sections)
+            assertTrue(res.rerouted)
+            assertEquals("Trafic interrompu.", closure.texts["fr"]?.title)
+            assertEquals("Der Bahnverkehr zwischen Puidoux und Vauderens ist unterbrochen.", closure.texts["de"]?.title)
+            val french = asked.filter { it.contains("<siri:Language>") }
+            assertEquals(1, french.size, "one extra request, for the direct search only")
+            assertTrue(french.single().contains("<siri:Language>fr</siri:Language>"))
+        }
+    }
+
+    @Test
+    fun `no extra request in German or without situations`() {
+        val asked = mutableListOf<String>()
+        withApp(transport = bilingualOjp(asked)) {
+            plan("""{"from":"8501120","to":"8504100","language":"de"}""")
+            assertTrue(asked.none { it.contains("<siri:Language>") })
+        }
+        asked.clear()
         withApp(
             transport =
                 OjpTransport { xml ->
@@ -223,9 +282,8 @@ class PlanRoutesTest {
                     ojp.post(xml)
                 },
         ) {
-            plan("""{"from":"8501120","to":"8504100","language":"fr"}""")
-            assertTrue(asked.isNotEmpty())
-            assertTrue(asked.all { it.contains("<siri:Language>fr</siri:Language>") })
+            plan(FR_PLAN)
+            assertTrue(asked.none { it.contains("<siri:Language>") }, "no situations, nothing to translate")
         }
     }
 
