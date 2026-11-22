@@ -8,6 +8,7 @@ import ch.ausweg.shared.model.EndType
 import ch.ausweg.shared.model.ReplacementBus
 import ch.ausweg.shared.model.Trip
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
 
 /** What the options screen puts in the «Our pick» card. */
@@ -121,3 +122,20 @@ private fun firstAfterReopening(
 
 /** Door-to-door time of the trip. */
 val Trip.duration: Duration get() = arrival - departure
+
+/** How far the clock may go back before a search and still keep its answer (heartbeat jitter, not a seek). */
+private val SEEK_SLACK: Duration = 1.minutes
+
+/**
+ * True when options from a «leave now» search at [plannedAt] no longer fit the clock at [now], so a fresh `/plan`
+ * is due: the picked trip has left (the replay or the day moved on, e.g. the disruption ended and the first trip of
+ * the old answer is long gone), or the clock went back before the search (replay seek, new scenario).
+ */
+fun needsReplan(
+    view: OptionsView,
+    plannedAt: Instant,
+    now: Instant,
+): Boolean {
+    val pick = view.pick ?: return false
+    return pick.trip.departure < now || now < plannedAt - SEEK_SLACK
+}
