@@ -93,8 +93,8 @@ private fun LegChip(
 ) {
     val c = Extra.colors
     val shape = RoundedCornerShape(6.dp)
-    val highlighted_ = highlighted && leg.kind == StripKind.TRAIN
-    val fg = if (highlighted_) c.onChip else MaterialTheme.colorScheme.onSurface
+    val highlightedTrain = highlighted && leg.kind == StripKind.TRAIN
+    val fg = if (highlightedTrain) c.onChip else MaterialTheme.colorScheme.onSurface
     val outline = MaterialTheme.colorScheme.onSurface
     val label = rideLabel(leg)
     Box(
@@ -102,7 +102,7 @@ private fun LegChip(
             .height(30.dp)
             .then(
                 when {
-                    highlighted_ -> Modifier.background(c.brand, shape).padding(horizontal = 8.dp)
+                    highlightedTrain -> Modifier.background(c.brand, shape).padding(horizontal = 8.dp)
                     leg.kind == StripKind.REPLACEMENT_BUS ->
                         Modifier.drawBehind {
                             drawRoundRect(
