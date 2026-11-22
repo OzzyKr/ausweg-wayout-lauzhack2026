@@ -57,6 +57,19 @@ fun affects(
     )
 }
 
+/**
+ * True if this disruption stops a train ridden from [from] to [to] (DIDOK), by the stops alone: a route a traveller
+ * shares has no intermediate stops or times. Matches like [affects] (sections, [Section.line], affected stops); only
+ * blocking disruptions count. Buses aren't asked: a road bus isn't on the closed line.
+ */
+fun Disruption.stopsTrain(
+    from: Int?,
+    to: Int?,
+): Boolean {
+    val ordered = listOf(from, to)
+    return hints.any { it in DisruptionHints.BLOCKING } && hitsLeg(ordered.filterNotNull().toSet(), ordered, null)
+}
+
 /** DIDOK numbers along the leg, boarding stop first. */
 private fun Leg.path(): Set<Int> = orderedPath().filterNotNull().toSet()
 
