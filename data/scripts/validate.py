@@ -19,9 +19,9 @@ KINDS = {"DETECTED", "CAUSE", "INTERRUPTION", "RESTRICTION", "SCOPE_CHANGE", "PR
 END_TYPES = {"APPROX", "AT_LEAST", "UNKNOWN"}
 CONFIDENCE = {"LOW", "MEDIUM", "HIGH"}
 INCIDENT_KEYS = {"id", "kultId", "title", "line", "lineStations", "stationIds", "lines", "replayStart", "replayEnd"}
-OPTIONAL_INCIDENT_KEYS = {"otherStations"}
+OPTIONAL_INCIDENT_KEYS = {"otherStations", "titles", "suggestedFrom", "suggestedTo"}
 EVENT_KEYS = {"t", "source", "kind", "sections", "expectedEnd", "confidence", "bus", "firstTrains", "noAlternative",
-              "cause", "summary", "raw"}
+              "cause", "summary", "summaries", "raw"}
 BUS_KEYS = {"status", "from", "to", "eta", "capacityPerBus", "count", "direct", "routes"}
 
 

@@ -21,6 +21,7 @@ enum class InfoSource {
  *
  * @property kind the data's event kind (`INTERRUPTION`, `PROGNOSIS`, `REPLACEMENT_BUS`, `ENDED`…).
  * @property summary a short paraphrase in the data's language (French for the demo scenarios), never raw internal text.
+ * @property summaries [summary] by language (the original included), when the data has translations.
  */
 @Serializable
 data class TimelineEntry(
@@ -29,4 +30,8 @@ data class TimelineEntry(
     val source: InfoSource,
     val kind: String,
     val summary: String,
+    val summaries: Map<String, String> = emptyMap(),
 )
+
+/** The summary in [uiLanguage] if the data has it, else the original. */
+fun TimelineEntry.summary(uiLanguage: String): String = summaries[uiLanguage] ?: summary

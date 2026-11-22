@@ -42,6 +42,7 @@ import ch.ausweg.shared.i18n.formatDate
 import ch.ausweg.shared.model.ClockState
 import ch.ausweg.shared.model.Mode
 import ch.ausweg.shared.model.Scenario
+import ch.ausweg.shared.model.title
 import ch.ausweg.shared.state.replayFraction
 import ch.ausweg.shared.state.replayInstant
 import kotlin.time.Instant
@@ -150,7 +151,7 @@ fun ModeSheet(
             }
             items(scenarios, key = { it.id }) { s ->
                 ModeRow(
-                    s.title,
+                    s.title(strings().language),
                     t("mode.replay_sub", "date" to formatDate(s.start, strings()), "time" to SwissTime.hhmm(s.start)),
                     Res.drawable.ic_history,
                     clock?.mode == Mode.HISTORICAL && clock.scenarioId == s.id,

@@ -57,4 +57,26 @@ class ContractsTest {
         assertFalse(TripImpact(skippedStops = listOf(8504014)).isBlocked)
         assertTrue(TripImpact(cancelledLegs = listOf(1)).isBlocked)
     }
+
+    @Test
+    fun timelineAndScenarioTextsInTheUiLanguageElseTheOriginal() {
+        val t = Instant.parse("2026-09-25T14:31:08Z")
+        val e =
+            TimelineEntry("d1", t, InfoSource.PUBLIC, "INFO", "Incendie", mapOf("fr" to "Incendie", "de" to "Brand"))
+        assertEquals("Brand", e.summary("de"))
+        assertEquals("Incendie", e.summary("it"))
+        assertEquals("Incendie", e.copy(summaries = emptyMap()).summary("de"))
+        val s = Scenario("s1", "Incendie", t, t, titles = mapOf("en" to "Fire"))
+        assertEquals("Fire", s.title("en"))
+        assertEquals("Incendie", s.title("de"))
+    }
+
+    @Test
+    fun timelineAndScenarioWithoutTranslationsStillDecode() {
+        val e =
+            json.decodeFromString<TimelineEntry>(
+                """{"disruptionId":"d1","t":"2026-09-25T14:31:08Z","source":"VIA","kind":"INFO","summary":"x"}""",
+            )
+        assertTrue(e.summaries.isEmpty())
+    }
 }

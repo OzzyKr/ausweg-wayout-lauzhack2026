@@ -22,6 +22,7 @@ internal data class ScenarioFile(
 
 /**
  * @property stationIds official station name to DIDOK number, for every station named in the events.
+ * @property titles [title] in other languages than [SCENARIO_LANGUAGE] (`en`, `de`, `it`), shown in the UI language.
  * @property suggestedFrom optional station name to prefill the plan screen with; defaults to the first of
  *   [lineStations] (and [suggestedTo] to the last).
  */
@@ -29,6 +30,7 @@ internal data class ScenarioFile(
 internal data class Incident(
     val id: String,
     val title: String,
+    val titles: Map<String, String> = emptyMap(),
     val lines: List<String> = emptyList(),
     val lineStations: List<String> = emptyList(),
     val stationIds: Map<String, Int> = emptyMap(),
@@ -60,13 +62,18 @@ internal data class EventBus(
     val routes: List<NamedSection> = emptyList(),
 )
 
-/** One event. [kind] stays a string so a new kind in the data doesn't break loading (it's then text only). */
+/**
+ * One event. [kind] stays a string so a new kind in the data doesn't break loading (it's then text only).
+ *
+ * @property summaries [summary] in other languages than [SCENARIO_LANGUAGE] (`en`, `de`, `it`).
+ */
 @Serializable
 internal data class ScenarioEvent(
     val t: Instant,
     val source: InfoSource,
     val kind: String,
     val summary: String,
+    val summaries: Map<String, String> = emptyMap(),
     val sections: List<NamedSection>? = null,
     val expectedEnd: EventEnd? = null,
     val bus: EventBus? = null,

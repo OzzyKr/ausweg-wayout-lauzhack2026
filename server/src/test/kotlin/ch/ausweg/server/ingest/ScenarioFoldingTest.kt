@@ -62,7 +62,7 @@ class ScenarioFoldingTest {
         assertEquals(instant("2026-09-25T16:00:00Z"), d.expectedEnd)
         assertEquals(EndType.APPROX, d.expectedEndType)
         assertEquals(DisruptionStatus.ACTIVE, d.status)
-        assertEquals("fr", d.texts.keys.single())
+        assertEquals(setOf("fr", "en", "de", "it"), d.texts.keys)
     }
 
     @Test
@@ -169,6 +169,23 @@ class ScenarioFoldingTest {
         assertEquals(data.updates.count { it.disruption.id == "2195005195853" }, puidouxTimeline.size)
         assertEquals(InfoSource.VIA, puidouxTimeline.first().source)
         assertTrue(puidouxTimeline.any { it.source == InfoSource.INTERNAL && it.kind == "REPLACEMENT_BUS" })
+    }
+
+    @Test
+    fun `texts come in every app language, original French included`() {
+        for (s in data.scenarios) assertEquals(setOf("fr", "en", "de", "it"), s.titles.keys, s.id)
+        for (e in data.timeline) {
+            assertEquals(
+                setOf("fr", "en", "de", "it"),
+                e.summaries.keys,
+                "${e.disruptionId} ${e.t}",
+            )
+        }
+        val d = at("2026-09-25T14:30:00Z") // 16:30
+        assertEquals("Interruption Puidoux - Vauderens et Lucens (incendie)", d.texts["fr"]?.title)
+        assertEquals("Unterbruch Puidoux - Vauderens und Lucens (Brand)", d.texts["de"]?.title)
+        assertTrue(d.texts["en"]!!.body.startsWith("No trains between Puidoux and Vauderens"))
+        assertEquals(d.texts["fr"]?.body, data.timeline.single { it.t == d.publishedAt }.summaries["fr"])
     }
 
     @Test
