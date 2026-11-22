@@ -1,5 +1,6 @@
 package ch.ausweg.shared.i18n
 
+import ch.ausweg.shared.disruption.PUBLISHED_LANGUAGES
 import ch.ausweg.shared.disruption.UpdateKind
 import ch.ausweg.shared.model.AdviceReason
 import ch.ausweg.shared.model.CommunityMatch
@@ -60,6 +61,9 @@ object I18nKeys {
     /** Bottom bar label. */
     fun tab(tab: Tab): String = "tab.${tab.name.lowercase()}"
 
+    /** A language's own name in the header's language menu («Français»). */
+    fun languageName(code: String): String = "language.$code"
+
     /** Every key the functions above can build, for the key-check test. */
     val built: List<String>
         get() =
@@ -69,5 +73,6 @@ object I18nKeys {
                 InfoSource.entries.map(::infoSource) +
                 UpdateKind.entries.map(::update) +
                 LoadError.entries.map(::loadError) +
-                Tab.entries.map(::tab)
+                Tab.entries.map(::tab) +
+                PUBLISHED_LANGUAGES.map(::languageName)
 }

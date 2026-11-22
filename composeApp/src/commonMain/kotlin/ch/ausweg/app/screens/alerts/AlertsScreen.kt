@@ -17,13 +17,13 @@ import ch.ausweg.app.components.TopBar
 import ch.ausweg.app.i18n.t
 import ch.ausweg.shared.state.AuswegApp
 
-/** Alerts tab: every disruption known now, with its full published text. */
+/** Alerts tab: every disruption known now, with its full text. */
 @Composable
 fun AlertsScreen(app: AuswegApp) {
     val alerts by app.alerts.collectAsState()
     val now by app.session.now.collectAsState()
     Column(Modifier.fillMaxSize()) {
-        TopBar(t("alerts.title"), subtitle = t("alerts.subtitle"))
+        TopBar(t("alerts.title"))
         if (alerts.isEmpty()) {
             EmptyState(t("plan.no_disruptions"))
         } else {

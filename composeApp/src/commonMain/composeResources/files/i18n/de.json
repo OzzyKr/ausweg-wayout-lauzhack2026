@@ -188,5 +188,9 @@
   "share.loop": "Eine Fahrt kann nicht an derselben Haltestelle beginnen und enden.",
   "share.cancel": "Abbrechen",
   "alerts.title": "Störungen",
-  "alerts.subtitle": "Wie von der SBB veröffentlicht"
+  "language.choose": "Sprache",
+  "language.en": "English",
+  "language.fr": "Français",
+  "language.de": "Deutsch",
+  "language.it": "Italiano"
 }

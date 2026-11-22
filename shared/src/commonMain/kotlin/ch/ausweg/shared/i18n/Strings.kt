@@ -92,13 +92,3 @@ fun pickLanguage(
         .map { it.substringBefore('-').substringBefore('_').lowercase() }
         .firstOrNull { it in available }
         ?: FALLBACK_LANGUAGE
-
-/** The language after [current] in [available], wrapping around (the header's language button). */
-fun nextLanguage(
-    current: String,
-    available: List<String>,
-): String {
-    if (available.isEmpty()) return current
-    val i = available.indexOf(current)
-    return available[(i + 1) % available.size]
-}
