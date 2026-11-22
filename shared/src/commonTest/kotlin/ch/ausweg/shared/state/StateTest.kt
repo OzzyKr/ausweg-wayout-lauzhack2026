@@ -279,13 +279,12 @@ class StateTest {
             assertEquals(ShareScope.THIS_DISRUPTION, ui.scope)
             assertEquals(1, ui.strip.changes.size)
 
-            app.share.note("ignored without a selected change")
+            app.share.note(3, "ignored: no such change")
             assertTrue(
                 app.share.ui.value.notes
                     .isEmpty(),
             )
-            app.share.selectChange(0)
-            app.share.note("  6 min at Yverdon is plenty  ")
+            app.share.note(0, "  6 min at Yverdon is plenty  ")
             app.postShare()
             runCurrent()
             val posted = api.posted.single()
@@ -310,8 +309,7 @@ class StateTest {
             share.scope(ShareScope.THIS_DISRUPTION)
             assertFalse(share.ui.value.canPost)
             share.scope(ShareScope.ALWAYS)
-            share.selectChange(0)
-            share.note("x".repeat(NOTE_MAX_LENGTH + 10))
+            share.note(0, "x".repeat(NOTE_MAX_LENGTH + 10))
             assertEquals(
                 NOTE_MAX_LENGTH,
                 share.ui.value.notes[0]
@@ -374,6 +372,31 @@ class StateTest {
                     .last()
                     .to.didok,
             )
+        }
+
+    @Test
+    fun shareEditModeAndTipsPerChange() =
+        runTest {
+            val share = ShareState(api, backgroundScope)
+            share.start(legStrip(Fx.viaYverdon("14:40", "15:50")).legs, disruptionId = null)
+            val ui = share.ui.value
+            assertEquals(listOf(null, 0, null), ui.stops.indices.map { ui.changeAt(it) })
+            assertNull(ui.changeAt(9))
+
+            share.editRoute(true)
+            assertFalse(share.ui.value.canPost, "not while editing the route")
+            share.search(StopTarget.Stop(1))
+            share.editRoute(false)
+            assertNull(share.ui.value.editing, "Done closes the stop search")
+            assertTrue(share.ui.value.canPost)
+
+            share.note(0, "")
+            assertEquals(mapOf(0 to ""), share.ui.value.notes, "«Add a tip» opens an empty tip field")
+            assertTrue(newRoute(share.ui.value)?.notes.orEmpty().isEmpty(), "empty tips aren't posted")
+            share.note(0, "Underpass, 3 min")
+            assertEquals("Underpass, 3 min", share.ui.value.notes[0])
+            share.note(5, "no such change")
+            assertEquals(setOf(0), share.ui.value.notes.keys)
         }
 
     @Test

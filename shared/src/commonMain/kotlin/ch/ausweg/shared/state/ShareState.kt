@@ -75,15 +75,15 @@ data class StopEdit(
  *
  * @property legs the rides of the route being shared: the suggested or taken trip at first, then as the user edits
  *   it (other stops, extra changes, line names).
+ * @property editingRoute the route's edit controls (other stops, extra changes, line names) are shown.
  * @property editing the open stop search, if any.
- * @property selectedChange the change (index into [strip]`.changes`) whose note is being edited.
- * @property notes note text per change index of [strip].
+ * @property notes note text per change index of [strip]; a change with an entry (even empty) shows its tip field.
  * @property disruptionId the disruption the trip avoided, for «this disruption»; null if there's none.
  */
 data class ShareUi(
     val legs: List<StripLeg> = emptyList(),
+    val editingRoute: Boolean = false,
     val editing: StopEdit? = null,
-    val selectedChange: Int? = null,
     val notes: Map<Int, String> = emptyMap(),
     val scope: ShareScope = ShareScope.ALWAYS,
     val disruptionId: String? = null,
@@ -102,9 +102,13 @@ data class ShareUi(
 
     val canAddChange: Boolean get() = legs.size < MAX_ROUTE_RIDES
 
+    /** The change (index into [strip]`.changes`) at stop [stop] of [stops]; null for the start, the end or no stop. */
+    fun changeAt(stop: Int): Int? = (stop - 1).takeIf { stop in 1 until stops.lastIndex }
+
     val canPost: Boolean
         get() =
             status != ShareStatus.POSTING &&
+                !editingRoute &&
                 editing == null &&
                 legs.size in 1..MAX_ROUTE_RIDES &&
                 !hasLoop &&
@@ -255,13 +259,20 @@ class ShareState(
         s.copy(legs = legs, status = ShareStatus.EDITING)
     }
 
-    fun selectChange(change: Int) = _ui.update { it.copy(selectedChange = change) }
+    /** Shows the route's edit controls, or hides them (and closes the stop search) with false. */
+    fun editRoute(on: Boolean) {
+        search?.cancel()
+        _ui.update { it.copy(editingRoute = on, editing = null) }
+    }
 
-    fun note(text: String) =
-        _ui.update { s ->
-            val change = s.selectedChange ?: return@update s
-            s.copy(notes = s.notes + (change to text.take(NOTE_MAX_LENGTH)))
-        }
+    /** The tip on [change] (index into [ShareUi.strip]`.changes`); «Add a tip» starts it empty. */
+    fun note(
+        change: Int,
+        text: String,
+    ) = _ui.update { s ->
+        val at = change.takeIf { it in s.strip.changes.indices } ?: return@update s
+        s.copy(notes = s.notes + (at to text.take(NOTE_MAX_LENGTH)))
+    }
 
     fun scope(scope: ShareScope) = _ui.update { it.copy(scope = scope) }
 
@@ -284,4 +295,4 @@ private fun ShareUi.withInput(change: (StopInput) -> StopInput): ShareUi =
 
 /** The changes moved, so notes pinned on them start over. */
 private fun ShareUi.routeChanged(legs: List<StripLeg>): ShareUi =
-    copy(legs = legs, editing = null, selectedChange = null, notes = emptyMap(), status = ShareStatus.EDITING)
+    copy(legs = legs, editing = null, notes = emptyMap(), status = ShareStatus.EDITING)
