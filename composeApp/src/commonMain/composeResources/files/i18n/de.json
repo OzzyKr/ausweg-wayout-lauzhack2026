@@ -177,5 +177,9 @@
   "share.failed": "Route konnte nicht veröffentlicht werden. Nochmals versuchen.",
   "share.gap": "Wähle Verbindungen, die aufeinander folgen: Weglassen kannst du nur welche am Anfang oder am Ende.",
   "alerts.title": "Störungen",
-  "alerts.subtitle": "Wie von der SBB veröffentlicht"
+  "language.choose": "Sprache",
+  "language.en": "English",
+  "language.fr": "Français",
+  "language.de": "Deutsch",
+  "language.it": "Italiano"
 }

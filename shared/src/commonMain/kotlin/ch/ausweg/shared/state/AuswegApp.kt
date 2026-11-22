@@ -2,7 +2,6 @@ package ch.ausweg.shared.state
 
 import ch.ausweg.shared.api.AuswegApi
 import ch.ausweg.shared.disruption.sortForDisplay
-import ch.ausweg.shared.i18n.nextLanguage
 import ch.ausweg.shared.i18n.pickLanguage
 import ch.ausweg.shared.model.Disruption
 import ch.ausweg.shared.model.RankedRoute
@@ -74,10 +73,14 @@ class AuswegApp(
         _language.value = pickLanguage(listOfNotNull(settings[SettingKeys.LANGUAGE]) + device, available)
     }
 
-    fun cycleLanguage(available: List<String>) {
-        val next = nextLanguage(_language.value ?: available.firstOrNull().orEmpty(), available)
-        _language.value = next
-        settings[SettingKeys.LANGUAGE] = next
+    /** The header's language menu. Codes not in [available] are ignored. */
+    fun setLanguage(
+        code: String,
+        available: List<String>,
+    ) {
+        if (code !in available) return
+        _language.value = code
+        settings[SettingKeys.LANGUAGE] = code
     }
 
     /** «Find my way». */

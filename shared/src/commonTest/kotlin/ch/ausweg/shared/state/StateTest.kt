@@ -471,16 +471,19 @@ class StateTest {
         }
 
     @Test
-    fun languageIsPickedAndCycled() =
+    fun languageIsPickedAndChosen() =
         runTest {
             val settings = MemorySettings()
             val app = AuswegApp(api, settings, backgroundScope)
             val langs = listOf("en", "fr", "de", "it")
             app.initLanguage(langs, listOf("fr-CH"))
             assertEquals("fr", app.language.value)
-            app.cycleLanguage(langs)
-            assertEquals("de", app.language.value)
-            assertEquals("de", settings[SettingKeys.LANGUAGE])
+            app.setLanguage("it", langs)
+            assertEquals("it", app.language.value)
+            assertEquals("it", settings[SettingKeys.LANGUAGE])
+            app.setLanguage("xx", langs)
+            assertEquals("it", app.language.value)
+            assertEquals("it", AuswegApp(api, settings, backgroundScope).language.value)
         }
 
     private companion object {
