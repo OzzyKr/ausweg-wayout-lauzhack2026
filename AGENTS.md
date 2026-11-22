@@ -40,9 +40,21 @@ The demo has two modes: **historical** replay (Sept 2026 data, with a simulated 
 | `data/` | `server` | `raw/` SBB datasets (gitignored, never committed) · `seed/` demo tips and routes (`community.json`) · `scenarios/` replay scenarios · `fixtures/ojp/` recorded OJP answers · `routing/` reroute hubs |
 | `gradle/`, `.github/`, `config/`, root files | `infra` | Build, CI/CD, lint config |
 
+### Architecture in short
+
+Full reasoning, one record per decision: [`docs/architecture.md`](docs/architecture.md). API contract: [`docs/api.md`](docs/api.md).
+
+- **`shared` has three targets: Android, Wasm and JVM.** The server depends on it, so the backend and both apps run the *same* `affects()`, `advise()`, `rankTrips()`, `rankTips()` and OJP parser. A change in `shared/model` changes the API: add fields with defaults only.
+- **Data flow:** SBB data → `data/scenarios/*.events.json` → server `ingest/` → global clock `replay/` → `/state` + SSE `/events` → shared `api/liveEvents()` → `state/` holders (`StateFlow`) → composables. Trips: app → `POST /plan` → server `ojp/` (OJP, time-shifted, fixtures, hub reroute) → shared `planOptions()` + `advise()` in the app.
+- **The server's clock is the truth.** Shared functions take `now` as a parameter; never read the device clock.
+- **Stations are DIDOK numbers** (`StopRef.didok`, `didokOf()`), never names.
+- **Platform code is tiny on purpose:** entry points, the `Settings` implementation (SharedPreferences / localStorage), `BackHandler`, the backend URL. Everything else is `commonMain`.
+
+**Adding or changing a feature?** Follow the skill [`.claude/skills/shared-first-feature/SKILL.md`](.claude/skills/shared-first-feature/SKILL.md) (any agent, not only Claude): contract → pure logic → state holder → tests → UI → strings in 4 languages → lint/test gate → log row → PR.
+
 ## 3. Engineering principles
 
-1. **Shared first.** Anything that isn't drawing pixels or calling a platform API goes in `shared/src/commonMain`. Screen state lives in shared classes that expose `StateFlow`; composables render state and send events, nothing more. No parsing, matching, ranking or time math in `composeApp`. (JetBrains scores how much logic is shared.)
+1. **Shared first.** Anything that isn't drawing pixels or calling a platform API goes in `shared/src/commonMain`. Screen state lives in shared classes that expose `StateFlow`; composables render state and send events, nothing more. No parsing, matching, ranking or time math in `composeApp`. (How much logic is shared is a core quality measure of this project.)
 2. **No hardcoded user-facing strings.** All UI text is a key in `i18n/en.json`, and English is the fallback. Disruption texts from SBB stay in their original language (DE/FR/IT/EN).
 3. **Test shared logic.** Every parser, matcher, ranker and state transition in `shared` ships with unit tests in `commonTest`, in the same PR. Use small scrubbed fixtures from real data. UI tests are optional.
 4. **Lint is law.** ktlint and detekt fail CI. Fix the code rather than suppress the warning. If you really must suppress, use `@Suppress("Rule")` with a one-line reason. Never loosen `config/detekt/detekt.yml` or `.editorconfig` without a human's OK.
