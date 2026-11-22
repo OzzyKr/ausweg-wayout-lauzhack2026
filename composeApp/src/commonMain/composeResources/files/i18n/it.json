@@ -177,5 +177,9 @@
   "share.failed": "Impossibile pubblicare il percorso. Riprova.",
   "share.gap": "Scegli coincidenze che si susseguono: puoi togliere solo quelle all'inizio o alla fine.",
   "alerts.title": "Perturbazioni",
-  "alerts.subtitle": "Come pubblicate dalle FFS"
+  "language.choose": "Lingua",
+  "language.en": "English",
+  "language.fr": "Français",
+  "language.de": "Deutsch",
+  "language.it": "Italiano"
 }

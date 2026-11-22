@@ -15,6 +15,7 @@ data class PlanRequest(
     val to: String,
     val departAt: Instant? = null,
     val via: List<String> = emptyList(),
+    val language: String? = null,
 )
 
 /** Where the trips of a [PlanResponse] came from. */

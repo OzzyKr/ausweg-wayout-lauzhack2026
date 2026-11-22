@@ -177,5 +177,9 @@
   "share.failed": "Couldn't post the route. Try again.",
   "share.gap": "Pick connections that follow each other: you can only leave out ones at the start or end.",
   "alerts.title": "Disruptions",
-  "alerts.subtitle": "As SBB published them"
+  "language.choose": "Language",
+  "language.en": "English",
+  "language.fr": "Français",
+  "language.de": "Deutsch",
+  "language.it": "Italiano"
 }

@@ -82,18 +82,24 @@ class OptionsState(
     private val _ui = MutableStateFlow<OptionsUi>(OptionsUi.Idle)
     val ui: StateFlow<OptionsUi> = _ui.asStateFlow()
     private var job: Job? = null
+    private var language: String? = null
 
     init {
         scope.launch { session.disruptions.drop(1).collect { recompute(it) } }
         scope.launch { session.community.drop(1).collect { refreshCommunity() } }
     }
 
-    fun search(query: PlanQuery) {
+    /** Searches [query]; [language] is the UI language, for the texts of live disruptions. */
+    fun search(
+        query: PlanQuery,
+        language: String? = null,
+    ) {
         job?.cancel()
+        this.language = language
         _ui.value = OptionsUi.Loading(query)
         job =
             scope.launch {
-                val request = PlanRequest(query.from.planRef(), query.to.planRef(), query.departAt)
+                val request = PlanRequest(query.from.planRef(), query.to.planRef(), query.departAt, language = language)
                 attempt { api.plan(request) }
                     .onSuccess { response ->
                         if (response.trips.isEmpty()) {
@@ -110,8 +116,8 @@ class OptionsState(
 
     fun retry() {
         when (val s = _ui.value) {
-            is OptionsUi.Failed -> search(s.query)
-            is OptionsUi.Ready -> search(s.query)
+            is OptionsUi.Failed -> search(s.query, language)
+            is OptionsUi.Ready -> search(s.query, language)
             else -> Unit
         }
     }

@@ -4,10 +4,11 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -24,9 +25,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import ch.ausweg.app.i18n.t
 import ch.ausweg.app.resources.Res
+import ch.ausweg.app.resources.ic_check
+import ch.ausweg.app.resources.ic_down
 import ch.ausweg.app.resources.ic_history
 import ch.ausweg.app.resources.ic_live
 import ch.ausweg.app.resources.ic_logo
+import ch.ausweg.shared.i18n.I18nKeys
 import ch.ausweg.shared.model.Mode
 import ch.ausweg.shared.state.AuswegApp
 
@@ -47,7 +51,7 @@ fun Logo(modifier: Modifier = Modifier) {
     }
 }
 
-/** Live / Replay chip (opens the mode sheet) and the language button, for a red header. */
+/** Live / Replay chip (opens the mode sheet) and the language menu, for a red header. */
 @Composable
 fun HeaderControls(
     app: AuswegApp,
@@ -73,16 +77,7 @@ fun HeaderControls(
                 )
             }
         }
-        Surface(
-            onClick = { app.cycleLanguage(languages) },
-            shape = CircleShape,
-            color = Color.Transparent,
-            modifier = Modifier.size(44.dp).border(1.5.dp, Color.White, CircleShape),
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Text((language ?: "en").uppercase(), style = MaterialTheme.typography.labelMedium, color = Color.White)
-            }
-        }
+        LanguageMenu(language ?: "en", languages) { app.setLanguage(it, languages) }
     }
     if (sheet) {
         ModeSheet(
@@ -98,5 +93,44 @@ fun HeaderControls(
             },
             onDismiss = { sheet = false },
         )
+    }
+}
+
+/** «EN ▾» on the red header; opens a menu with every language under its own name. */
+@Composable
+private fun LanguageMenu(
+    current: String,
+    languages: List<String>,
+    onChoose: (String) -> Unit,
+) {
+    var open by remember { mutableStateOf(false) }
+    Box {
+        Surface(
+            onClick = { open = true },
+            shape = RoundedCornerShape(50),
+            color = Color.Transparent,
+            modifier = Modifier.height(44.dp).border(1.5.dp, Color.White, RoundedCornerShape(50)),
+        ) {
+            Row(
+                Modifier.padding(start = 12.dp, end = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                Text(current.uppercase(), style = MaterialTheme.typography.labelMedium, color = Color.White)
+                Ic(Res.drawable.ic_down, t("language.choose"), tint = Color.White, size = 16)
+            }
+        }
+        DropdownMenu(open, onDismissRequest = { open = false }) {
+            languages.forEach { code ->
+                DropdownMenuItem(
+                    text = { Text(t(I18nKeys.languageName(code))) },
+                    onClick = {
+                        open = false
+                        onChoose(code)
+                    },
+                    trailingIcon = { if (code == current) Ic(Res.drawable.ic_check, null, size = 18) },
+                )
+            }
+        }
     }
 }

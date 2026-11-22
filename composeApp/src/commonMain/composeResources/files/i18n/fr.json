@@ -177,5 +177,9 @@
   "share.failed": "Publication impossible. Réessayez.",
   "share.gap": "Choisissez des correspondances qui se suivent : seules celles du début ou de la fin peuvent être retirées.",
   "alerts.title": "Perturbations",
-  "alerts.subtitle": "Telles que publiées par les CFF"
+  "language.choose": "Langue",
+  "language.en": "English",
+  "language.fr": "Français",
+  "language.de": "Deutsch",
+  "language.it": "Italiano"
 }

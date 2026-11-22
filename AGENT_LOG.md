@@ -41,3 +41,5 @@ Outcome: `pending` → set by the human reviewer to `accepted` / `changed: why` 
 | 2026-11-21 22:23 | claude/shared | Fixed #15 review: live hints, via stops, merged answers | accepted |
 | 2026-11-21 23:28 | claude/shared | Wait card shows first train after reopening | accepted |
 | 2026-11-21 23:16 | claude/server | CORS: allow SSE headers so web gets /events | accepted |
+| 2026-11-22 06:50 | claude/ui | Language dropdown; dropped alerts subtitle | pending |
+| 2026-11-22 06:53 | claude/shared | OJP trip texts in the UI language | pending |

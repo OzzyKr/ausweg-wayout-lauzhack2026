@@ -43,6 +43,18 @@ class OjpRequestsTest {
     }
 
     @Test
+    fun tripRequestAsksForSituationTextsInTheUiLanguage() {
+        val plain = OjpRequests.trip(TripQuery("8501120", "8501117", departAt), now, "ausweg_test")
+        assertFalse(plain.contains("Language"), "no language: OJP answers in German")
+
+        val french = OjpRequests.trip(TripQuery("8501120", "8501117", departAt, language = "fr"), now, "ausweg_test")
+        assertTrue(french.startsWith("<?xml"), "XML declaration must come first")
+        val request = XmlNode.parse(french).at("OJPRequest", "ServiceRequest")!!
+        assertEquals("fr", request.textAt("ServiceRequestContext", "Language"))
+        assertEquals("8501117", request.textAt("OJPTripRequest", "Destination", "PlaceRef", "StopPointRef"))
+    }
+
+    @Test
     fun locationRequestEscapesUserInput() {
         val query = """Gare <Nord> & "Sud" 'x'"""
         val xml = OjpRequests.location(query, now, "ausweg_test")

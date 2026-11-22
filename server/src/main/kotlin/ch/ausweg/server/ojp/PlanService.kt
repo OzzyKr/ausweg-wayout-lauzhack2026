@@ -2,6 +2,7 @@ package ch.ausweg.server.ojp
 
 import ch.ausweg.shared.disruption.affects
 import ch.ausweg.shared.disruption.disruptionsFrom
+import ch.ausweg.shared.disruption.withTextsOf
 import ch.ausweg.shared.model.Disruption
 import ch.ausweg.shared.model.Location
 import ch.ausweg.shared.model.Mode
@@ -19,13 +20,17 @@ import kotlin.time.Instant
 
 private const val MAX_OFFLINE_STOPS = 10
 
+/** The language OJP answers in without one, and the one the situation texts are read in. */
+private const val PARSE_LANGUAGE = "de"
+
 /**
  * `POST /plan` and `GET /stops`.
  *
  * Planning: search OJP; in live mode, the situations OJP attaches to the answer become disruptions too (shared
  * `disruptionsFrom()`). If every trip is blocked by a current disruption (shared `affects()`), search again through
  * up to 3 hub stations that avoid the closed sections ([hubs], shared `viaCandidates()`), then rank everything with
- * shared `rankTrips()`. The app runs `advise()` on the result.
+ * shared `rankTrips()`. The app runs `advise()` on the result. Situations are read in German; texts in the UI
+ * language are added for display only ([withUiTexts]).
  *
  * @param state the backend state (clock + disruptions) at the moment of the request.
  * @param stations every station the scenario data knows, for stop search while OJP is unreachable.
@@ -42,7 +47,8 @@ class PlanService(
     suspend fun plan(request: PlanRequest): PlanResponse {
         val now = state()
         val historical = now.clock.mode == Mode.HISTORICAL
-        val query = TripQuery(request.from, request.to, request.departAt ?: now.clock.now, request.via)
+        val query =
+            TripQuery(request.from, request.to, request.departAt ?: now.clock.now, request.via)
         val direct = ojp.trips(query, historical)
         var answers = listOf(direct)
         var disruptions = withLive(now.disruptions, answers, query.departAt)
@@ -67,6 +73,7 @@ class PlanService(
             rerouted = extra.any { it.trips.isNotEmpty() }
             disruptions = withLive(now.disruptions, answers, query.departAt)
         }
+        disruptions = withUiTexts(disruptions, direct, query, request.language)
         return PlanResponse(
             rankTrips(trips, disruptions),
             disruptions,
@@ -91,6 +98,35 @@ class PlanService(
         if (live.isEmpty()) return known
         val found = disruptionsFrom(live.flatMap { it.situations }, live.flatMap { it.trips }, departAt)
         return (known + found).distinctBy { it.id }
+    }
+
+    /**
+     * [disruptions] with the texts of the direct answer's live situations in the UI [language] added, for display.
+     * Everything else (sections, hints, status) is read from the German answer, as before: the keyword rules and the
+     * station names in «zwischen X und Y» are matched on SBB's German texts, and a French or Italian text may name a
+     * station differently («Berne», «Ginevra»). So the UI language costs one more OJP request, only when the answer
+     * has situations and the UI isn't German; if it fails, the texts stay German.
+     */
+    private suspend fun withUiTexts(
+        disruptions: List<Disruption>,
+        direct: FoundTrips,
+        query: TripQuery,
+        language: String?,
+    ): List<Disruption> {
+        val wanted =
+            language != null &&
+                language != PARSE_LANGUAGE &&
+                direct.source == TripSource.LIVE &&
+                direct.situations.isNotEmpty()
+        if (!wanted) return disruptions
+        val translated =
+            try {
+                ojp.trips(query.copy(language = language), historical = false).situations
+            } catch (e: OjpUnavailable) {
+                log.warn("Situation texts in {} unavailable: {}", language, e.message)
+                emptyList()
+            }
+        return withTextsOf(disruptions, translated)
     }
 
     /** OJP stop search, or a name search over the scenario stations when OJP can't answer. */

@@ -49,13 +49,4 @@ class StringsTest {
         assertEquals("en", pickLanguage(listOf("ja"), available))
         assertEquals("en", pickLanguage(emptyList(), available))
     }
-
-    @Test
-    fun nextLanguageWrapsAround() {
-        val available = listOf("en", "fr", "de", "it")
-        assertEquals("fr", nextLanguage("en", available))
-        assertEquals("en", nextLanguage("it", available))
-        assertEquals("en", nextLanguage("xx", available))
-        assertEquals("en", nextLanguage("en", emptyList()))
-    }
 }

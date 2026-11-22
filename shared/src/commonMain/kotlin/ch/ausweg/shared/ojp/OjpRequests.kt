@@ -14,6 +14,7 @@ data class TripQuery(
     val departAt: Instant,
     val via: List<String> = emptyList(),
     val results: Int = 5,
+    val language: String? = null,
 )
 
 /**
@@ -28,7 +29,8 @@ object OjpRequests {
 
     /**
      * Trips for [query]. Intermediate stops are always included: they are what tells us whether a leg
-     * passes an affected section.
+     * passes an affected section. [TripQuery.language] picks the language of the situation texts; OJP answers in
+     * German without it.
      */
     fun trip(
         query: TripQuery,
@@ -56,6 +58,7 @@ object OjpRequests {
             </Params>
             </OJPTripRequest>
             """,
+            query.language,
         )
     }
 
