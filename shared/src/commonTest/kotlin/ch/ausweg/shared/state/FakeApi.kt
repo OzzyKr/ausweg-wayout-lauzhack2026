@@ -36,6 +36,7 @@ class FakeApi : AuswegApi {
     var planResponse: PlanResponse? =
         PlanResponse(listOf(Fx.ic1, Fx.viaYverdon("14:40", "15:50")), emptyList(), TripSource.FIXTURE)
     var planError: Throwable? = null
+    var lastPlan: PlanRequest? = null
     var stops: List<Location> = listOf(Location(LAUSANNE))
     var routes: List<RankedRoute> = listOf(ROUTE)
     var tips: List<RankedTip> = listOf(TIP)
@@ -67,6 +68,7 @@ class FakeApi : AuswegApi {
 
     override suspend fun plan(request: PlanRequest): PlanResponse {
         calls += "plan ${request.from} ${request.to}"
+        lastPlan = request
         planError?.let { throw it }
         return checkNotNull(planResponse)
     }

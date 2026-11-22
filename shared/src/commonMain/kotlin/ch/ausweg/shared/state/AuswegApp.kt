@@ -86,7 +86,7 @@ class AuswegApp(
     /** «Find my way». */
     fun findMyWay() {
         val query = plan.ui.value.query ?: return
-        options.search(query)
+        options.search(query, _language.value)
         navigator.push(Screen.Options)
     }
 

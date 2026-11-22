@@ -376,6 +376,21 @@ class StateTest {
         }
 
     @Test
+    fun searchAsksInTheUiLanguageAndRetriesInIt() =
+        runTest {
+            val app = app()
+            state(fire)
+            app.initLanguage(listOf("en", "fr", "de", "it"), listOf("it-CH"))
+            app.findMyWay()
+            runCurrent()
+            assertEquals("it", api.lastPlan?.language)
+            api.lastPlan = null
+            app.options.retry()
+            runCurrent()
+            assertEquals("it", api.lastPlan?.language)
+        }
+
+    @Test
     fun routesNeedBothStationNumbers() =
         runTest {
             val app = app()

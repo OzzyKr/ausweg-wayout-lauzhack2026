@@ -42,7 +42,14 @@ class PlanService(
     suspend fun plan(request: PlanRequest): PlanResponse {
         val now = state()
         val historical = now.clock.mode == Mode.HISTORICAL
-        val query = TripQuery(request.from, request.to, request.departAt ?: now.clock.now, request.via)
+        val query =
+            TripQuery(
+                request.from,
+                request.to,
+                request.departAt ?: now.clock.now,
+                request.via,
+                language = request.language,
+            )
         val direct = ojp.trips(query, historical)
         var answers = listOf(direct)
         var disruptions = withLive(now.disruptions, answers, query.departAt)

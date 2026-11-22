@@ -214,6 +214,22 @@ class PlanRoutesTest {
         }
 
     @Test
+    fun `the UI language goes to OJP`() {
+        val asked = mutableListOf<String>()
+        withApp(
+            transport =
+                OjpTransport { xml ->
+                    asked += xml
+                    ojp.post(xml)
+                },
+        ) {
+            plan("""{"from":"8501120","to":"8504100","language":"fr"}""")
+            assertTrue(asked.isNotEmpty())
+            assertTrue(asked.all { it.contains("<siri:Language>fr</siri:Language>") })
+        }
+    }
+
+    @Test
     fun `situations of the reroute answers are returned too`() =
         withApp(
             transport =
