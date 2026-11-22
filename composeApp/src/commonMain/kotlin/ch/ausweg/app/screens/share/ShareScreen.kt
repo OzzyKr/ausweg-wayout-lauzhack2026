@@ -9,8 +9,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -18,29 +17,36 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import ch.ausweg.app.components.AppCard
+import ch.ausweg.app.components.Ic
 import ch.ausweg.app.components.LegStripView
 import ch.ausweg.app.components.PrimaryButton
 import ch.ausweg.app.components.SectionLabel
-import ch.ausweg.app.components.Tag
+import ch.ausweg.app.components.StopField
 import ch.ausweg.app.components.TopBar
 import ch.ausweg.app.i18n.t
+import ch.ausweg.app.resources.Res
+import ch.ausweg.app.resources.ic_add
 import ch.ausweg.app.theme.Extra
-import ch.ausweg.shared.i18n.SwissTime
 import ch.ausweg.shared.state.AuswegApp
 import ch.ausweg.shared.state.NOTE_MAX_LENGTH
 import ch.ausweg.shared.state.ShareScope
+import ch.ausweg.shared.state.ShareState
 import ch.ausweg.shared.state.ShareStatus
+import ch.ausweg.shared.state.ShareUi
+import ch.ausweg.shared.state.StopEdit
+import ch.ausweg.shared.state.StopTarget
 import ch.ausweg.shared.tips.StripLeg
+import ch.ausweg.shared.tips.isBus
 
-/** 4 · Share a route: pick the rides you took, pin notes on changes, «this disruption» or «always», post. */
+/** 4 · Share your route: change stops and add changes, name the lines, pin tips on changes, choose when, post. */
 @Composable
 fun ShareScreen(app: AuswegApp) {
     val ui by app.share.ui.collectAsState()
@@ -49,13 +55,9 @@ fun ShareScreen(app: AuswegApp) {
         TopBar(t("share.title"), onBack = { app.back() }, close = true, backLabel = t("common.close"))
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
             SectionLabel(t("share.step_pick"))
-            AppCard {
-                Column {
-                    ui.legs.forEachIndexed { i, leg ->
-                        LegRow(leg, ui.checked.getOrElse(i) { false }) { app.share.toggle(i) }
-                        if (i < ui.legs.lastIndex) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                    }
-                }
+            AppCard { RouteEditor(ui, app.share) }
+            if (ui.hasLoop) {
+                Text(t("share.loop"), Modifier.padding(top = 12.dp), color = MaterialTheme.colorScheme.error)
             }
             SectionLabel(t("share.step_note"))
             if (strip.changes.isEmpty()) {
@@ -110,9 +112,6 @@ fun ShareScreen(app: AuswegApp) {
                     app.share.scope(ShareScope.ALWAYS)
                 }
             }
-            if (ui.hasGap) {
-                Text(t("share.gap"), Modifier.padding(top = 12.dp), color = MaterialTheme.colorScheme.error)
-            }
             if (ui.status == ShareStatus.FAILED) {
                 Text(t("share.failed"), Modifier.padding(top = 12.dp), color = MaterialTheme.colorScheme.error)
             }
@@ -130,29 +129,103 @@ fun ShareScreen(app: AuswegApp) {
     }
 }
 
+/** Every stop of the route, with the ride after it: line name, train or bus, and «Add a change». */
 @Composable
-private fun LegRow(
+private fun RouteEditor(
+    ui: ShareUi,
+    share: ShareState,
+) {
+    val stops = ui.stops
+    Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
+        stops.forEachIndexed { i, stop ->
+            val label =
+                when (i) {
+                    0 -> t("share.stop_start")
+                    stops.lastIndex -> t("share.stop_end")
+                    else -> t("share.stop_change")
+                }
+            val edit = ui.editing
+            if (edit != null && edit.target == StopTarget.Stop(i)) {
+                StopSearch(label, edit, share)
+            } else {
+                StopRow(
+                    label,
+                    stop.name,
+                    onChange = { share.search(StopTarget.Stop(i)) },
+                    onRemove = if (i in 1 until stops.lastIndex) ({ share.removeChange(i) }) else null,
+                )
+            }
+            ui.legs.getOrNull(i)?.let { leg ->
+                RideRow(leg, onLine = { share.ride(i, line = it) }, onBus = { share.ride(i, bus = it) })
+                if (edit != null && edit.target == StopTarget.NewChange(i)) {
+                    StopSearch(t("share.new_change"), edit, share)
+                } else if (ui.canAddChange) {
+                    TextButton({ share.search(StopTarget.NewChange(i)) }, Modifier.padding(start = 4.dp)) {
+                        Ic(Res.drawable.ic_add, null, tint = Extra.colors.brand, size = 18)
+                        Text(t("share.add_change"), Modifier.padding(start = 6.dp), color = Extra.colors.brand)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun StopRow(
+    label: String,
+    name: String,
+    onChange: () -> Unit,
+    onRemove: (() -> Unit)?,
+) {
+    Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(name, style = MaterialTheme.typography.titleMedium)
+        }
+        TextButton(onChange) { Text(t("share.change_stop")) }
+        if (onRemove != null) {
+            TextButton(onRemove) { Text(t("share.remove_stop"), color = MaterialTheme.colorScheme.error) }
+        }
+    }
+}
+
+@Composable
+private fun StopSearch(
+    label: String,
+    edit: StopEdit,
+    share: ShareState,
+) {
+    StopField(
+        label,
+        edit.input,
+        onType = { share.typeStop(it) },
+        onChoose = { share.chooseStop(it) },
+        trailing = { TextButton({ share.search(null) }) { Text(t("share.cancel")) } },
+    )
+}
+
+/** The ride between two stops: its line name and whether it was a train or a bus. */
+@Composable
+private fun RideRow(
     leg: StripLeg,
-    checked: Boolean,
-    onToggle: () -> Unit,
+    onLine: (String) -> Unit,
+    onBus: (Boolean) -> Unit,
 ) {
     Row(
-        Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
+        Modifier.fillMaxWidth().padding(start = 16.dp, top = 2.dp, bottom = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Checkbox(
-            checked,
-            { onToggle() },
-            colors = CheckboxDefaults.colors(checkedColor = Extra.colors.brand, checkmarkColor = Color.White),
+        OutlinedTextField(
+            value = leg.label.orEmpty(),
+            onValueChange = onLine,
+            modifier = Modifier.weight(1f),
+            singleLine = true,
+            placeholder = { Text(t("share.line_hint")) },
+            shape = MaterialTheme.shapes.medium,
         )
-        Tag(leg.label ?: t("strip.bus"), Extra.colors.chip, Extra.colors.onChip)
-        val dep = leg.departure?.let { " " + SwissTime.hhmm(it) }.orEmpty()
-        val arr = leg.arrival?.let { " " + SwissTime.hhmm(it) }.orEmpty()
-        Text(
-            t("share.leg", "from" to leg.from.name + dep, "to" to leg.to.name + arr),
-            Modifier.padding(start = 10.dp),
-            style = MaterialTheme.typography.bodyMedium,
-        )
+        FilterChip(!leg.isBus, { onBus(false) }, label = { Text(t("share.train")) })
+        FilterChip(leg.isBus, { onBus(true) }, label = { Text(t("share.bus")) })
     }
 }
 

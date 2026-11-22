@@ -10,36 +10,47 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.serialization.json.Json
 
 /**
- * This device's votes. The backend keeps one vote per voter and target (a new one replaces the old), so voting the
- * same value twice is skipped. [mine] remembers the votes of this run, to highlight the buttons.
+ * This device's votes. The backend keeps one vote per voter and target (a new one replaces the old). Voting the
+ * value you already gave takes the vote back. [mine] highlights the buttons; it is kept in [Settings], so a vote
+ * from before a reload can still be seen and taken back.
  */
 class Voting(
     private val api: AuswegApi,
-    private val voterId: String,
+    private val settings: Settings,
 ) {
-    private val _mine = MutableStateFlow<Map<String, VoteValue>>(emptyMap())
+    private val voterId = settings.voterId()
+    private val _mine = MutableStateFlow(load())
     val mine: StateFlow<Map<String, VoteValue>> = _mine.asStateFlow()
 
-    /** The updated route, or null if the vote was a repeat or failed. */
+    /** Votes [value] on a route, or takes the vote back if it was [value] already. The route after, null on failure. */
     suspend fun route(
         id: String,
         value: VoteValue,
-    ): CommunityRoute? = cast(id, value) { api.voteRoute(id, VoteRequest(voterId, value)) }
+    ): CommunityRoute? = cast(id, value) { api.voteRoute(id, VoteRequest(voterId, it)) }
 
-    /** The updated tip, or null if the vote was a repeat or failed. */
+    /** Votes [value] on a tip, or takes the vote back if it was [value] already. The updated tip, null on failure. */
     suspend fun tip(
         id: String,
         value: VoteValue,
-    ): Tip? = cast(id, value) { api.voteTip(id, VoteRequest(voterId, value)) }
+    ): Tip? = cast(id, value) { api.voteTip(id, VoteRequest(voterId, it)) }
 
     private suspend fun <T> cast(
         id: String,
         value: VoteValue,
-        call: suspend () -> T,
+        call: suspend (VoteValue?) -> T,
     ): T? {
-        if (_mine.value[id] == value) return null
-        return attempt { call() }.getOrNull()?.also { _mine.update { m -> m + (id to value) } }
+        val next = value.takeUnless { _mine.value[id] == value }
+        return attempt { call(next) }.getOrNull()?.also {
+            _mine.update { m -> if (next == null) m - id else m + (id to next) }
+            settings[SettingKeys.MY_VOTES] = Json.encodeToString(_mine.value)
+        }
     }
+
+    private fun load(): Map<String, VoteValue> =
+        settings[SettingKeys.MY_VOTES]
+            ?.let { runCatching { Json.decodeFromString<Map<String, VoteValue>>(it) }.getOrNull() }
+            .orEmpty()
 }

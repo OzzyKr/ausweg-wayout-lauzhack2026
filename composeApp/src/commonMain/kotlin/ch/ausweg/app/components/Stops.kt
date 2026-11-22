@@ -122,7 +122,7 @@ fun StopTimeline(
                     when {
                         leg.label != null && leg.direction != null ->
                             t("stops.line_towards", "line" to leg.label, "direction" to leg.direction)
-                        else -> leg.label ?: t("strip.bus")
+                        else -> rideLabel(leg)
                     },
                 dot = DotKind.STOP,
                 lineBelow = true,

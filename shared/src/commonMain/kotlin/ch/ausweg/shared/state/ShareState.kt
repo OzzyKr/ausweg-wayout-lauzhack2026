@@ -4,21 +4,32 @@ import ch.ausweg.shared.api.AuswegApi
 import ch.ausweg.shared.api.attempt
 import ch.ausweg.shared.disruption.affects
 import ch.ausweg.shared.model.Disruption
+import ch.ausweg.shared.model.Location
 import ch.ausweg.shared.model.NewNote
 import ch.ausweg.shared.model.NewRoute
 import ch.ausweg.shared.model.RouteLeg
+import ch.ausweg.shared.model.StopRef
 import ch.ausweg.shared.routing.Pick
 import ch.ausweg.shared.tips.LegStrip
 import ch.ausweg.shared.tips.StripLeg
 import ch.ausweg.shared.tips.busStrip
+import ch.ausweg.shared.tips.isSameStop
 import ch.ausweg.shared.tips.legStrip
 import ch.ausweg.shared.tips.stripOf
+import ch.ausweg.shared.tips.withBus
+import ch.ausweg.shared.tips.withChangeAt
+import ch.ausweg.shared.tips.withStop
+import ch.ausweg.shared.tips.withoutChange
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 
 /** «When is this useful?» on the share screen. */
 enum class ShareScope {
@@ -34,46 +45,69 @@ enum class ShareStatus { EDITING, POSTING, POSTED, FAILED }
 /** Longest note we accept. */
 const val NOTE_MAX_LENGTH = 500
 
+/** Longest line name («IR 15», «Bus 701»). */
+const val LINE_MAX_LENGTH = 20
+
+/** Most rides a shared route may have (the backend's limit). */
+const val MAX_ROUTE_RIDES = 12
+
+/** Which stop the share screen's stop search changes. */
+sealed interface StopTarget {
+    /** Stop [index] of [ShareUi.stops]. */
+    data class Stop(
+        val index: Int,
+    ) : StopTarget
+
+    /** A new change in the middle of ride [leg]. */
+    data class NewChange(
+        val leg: Int,
+    ) : StopTarget
+}
+
+/** The open stop search: what it changes and what's typed. */
+data class StopEdit(
+    val target: StopTarget,
+    val input: StopInput = StopInput(),
+)
+
 /**
  * The share screen.
  *
- * @property legs every ride of the trip being shared; [checked] says which ones the user took.
+ * @property legs the rides of the route being shared: the suggested or taken trip at first, then as the user edits
+ *   it (other stops, extra changes, line names).
+ * @property editing the open stop search, if any.
  * @property selectedChange the change (index into [strip]`.changes`) whose note is being edited.
  * @property notes note text per change index of [strip].
  * @property disruptionId the disruption the trip avoided, for «this disruption»; null if there's none.
  */
 data class ShareUi(
     val legs: List<StripLeg> = emptyList(),
-    val checked: List<Boolean> = emptyList(),
+    val editing: StopEdit? = null,
     val selectedChange: Int? = null,
     val notes: Map<Int, String> = emptyMap(),
     val scope: ShareScope = ShareScope.ALWAYS,
     val disruptionId: String? = null,
     val status: ShareStatus = ShareStatus.EDITING,
 ) {
-    /** The strip of the checked rides, with their changes. */
-    val strip: LegStrip get() = stripOf(legs.filterIndexed { i, _ -> checked.getOrElse(i) { false } }, emptyList())
+    /** Start, every change, end. */
+    val stops: List<StopRef> get() = legs.firstOrNull()?.let { listOf(it.from) + legs.map { l -> l.to } }.orEmpty()
+
+    /** The rides with their changes. */
+    val strip: LegStrip get() = stripOf(legs, emptyList())
 
     val canUseThisDisruption: Boolean get() = disruptionId != null
 
-    /**
-     * The checked rides follow each other: unchecking a ride in the middle would post a route with a gap (a «change»
-     * at Yverdon that leaves from Payerne). Only rides at the start or end can be left out.
-     */
-    val checkedInOneGo: Boolean
-        get() {
-            val first = checked.indexOfFirst { it }
-            val last = checked.indexOfLast { it }
-            return first >= 0 && (first..last).all { checked[it] }
-        }
+    /** A ride ends where it starts (the same stop twice in a row): the share screen says why it can't post. */
+    val hasLoop: Boolean get() = legs.any { it.from.isSameStop(it.to) }
 
-    /** Some rides are checked, but not in one go: the share screen says why it can't post (`share.gap`). */
-    val hasGap: Boolean get() = checked.any { it } && !checkedInOneGo
+    val canAddChange: Boolean get() = legs.size < MAX_ROUTE_RIDES
 
     val canPost: Boolean
         get() =
             status != ShareStatus.POSTING &&
-                checkedInOneGo &&
+                editing == null &&
+                legs.size in 1..MAX_ROUTE_RIDES &&
+                !hasLoop &&
                 (scope == ShareScope.ALWAYS || canUseThisDisruption)
 }
 
@@ -112,7 +146,14 @@ fun newRoute(ui: ShareUi): NewRoute? {
     return NewRoute(
         legs =
             strip.legs.map {
-                RouteLeg(it.from, it.to, it.label, it.mode, it.departurePlatform, it.arrivalPlatform)
+                RouteLeg(
+                    it.from,
+                    it.to,
+                    it.label?.trim()?.ifEmpty { null },
+                    it.mode,
+                    it.departurePlatform,
+                    it.arrivalPlatform,
+                )
             },
         permanent = ui.scope == ShareScope.ALWAYS,
         disruptionId = ui.disruptionId.takeIf { ui.scope == ShareScope.THIS_DISRUPTION },
@@ -126,34 +167,93 @@ fun newRoute(ui: ShareUi): NewRoute? {
     )
 }
 
-/** «Share a route»: pick the rides you took, pin notes on the changes, choose when it's useful, post. */
+/**
+ * «Share your route»: starts from the suggested or taken trip; the user can change any stop, add or remove changes,
+ * name the lines, pin notes on the changes, choose when it's useful and post.
+ */
 class ShareState(
     private val api: AuswegApi,
     private val scope: CoroutineScope,
+    private val debounce: Duration = 300.milliseconds,
 ) {
     private val _ui = MutableStateFlow(ShareUi())
     val ui: StateFlow<ShareUi> = _ui.asStateFlow()
+    private var search: Job? = null
 
-    /** Starts sharing [legs] (all checked). With a [disruptionId], «this disruption» is preselected. */
+    /** Starts sharing [legs]. With a [disruptionId], «this disruption» is preselected. */
     fun start(
         legs: List<StripLeg>,
         disruptionId: String?,
     ) {
+        search?.cancel()
         _ui.value =
             ShareUi(
                 legs = legs,
-                checked = legs.map { true },
                 scope = if (disruptionId != null) ShareScope.THIS_DISRUPTION else ShareScope.ALWAYS,
                 disruptionId = disruptionId,
             )
     }
 
-    /** Checking or unchecking a ride changes the changes, so notes start over. */
-    fun toggle(leg: Int) =
+    /** Opens the stop search for [target] (an existing stop, or a new change), or closes it with null. */
+    fun search(target: StopTarget?) {
+        search?.cancel()
         _ui.update { s ->
-            val checked = s.checked.mapIndexed { i, c -> if (i == leg) !c else c }
-            s.copy(checked = checked, selectedChange = null, notes = emptyMap(), status = ShareStatus.EDITING)
+            val valid =
+                when (target) {
+                    null -> true
+                    is StopTarget.Stop -> target.index in s.stops.indices
+                    is StopTarget.NewChange -> s.canAddChange && target.leg in s.legs.indices
+                }
+            if (valid) s.copy(editing = target?.let { StopEdit(it) }) else s
         }
+    }
+
+    /** The user typed [text] in the stop search: look up suggestions after a short pause. */
+    fun typeStop(text: String) {
+        if (_ui.value.editing == null) return
+        _ui.update { it.withInput { StopInput(query = text) } }
+        search?.cancel()
+        if (text.trim().length < MIN_STOP_QUERY) return
+        search =
+            scope.launch {
+                delay(debounce)
+                val found = attempt { api.stops(text.trim()) }.getOrDefault(emptyList())
+                _ui.update { s -> s.withInput { if (it.query == text) it.copy(suggestions = found) else it } }
+            }
+    }
+
+    /** Puts [location] where the stop search says. */
+    fun chooseStop(location: Location) {
+        search?.cancel()
+        _ui.update { s ->
+            val edit = s.editing ?: return@update s
+            val legs =
+                when (val target = edit.target) {
+                    is StopTarget.Stop -> s.legs.withStop(target.index, location.stop)
+                    is StopTarget.NewChange -> s.legs.withChangeAt(target.leg, location.stop)
+                }
+            s.routeChanged(legs)
+        }
+    }
+
+    /** Leaves out the change at stop [index] (not the start or end). */
+    fun removeChange(index: Int) = _ui.update { it.routeChanged(it.legs.withoutChange(index)) }
+
+    /** Ride [leg]'s [line] name, as typed, and/or whether it was a [bus]; null leaves that as it is. */
+    fun ride(
+        leg: Int,
+        line: String? = null,
+        bus: Boolean? = null,
+    ) = _ui.update { s ->
+        var legs = s.legs
+        if (line !=
+            null
+        ) {
+            legs = legs.mapIndexed { i, l -> if (i == leg) l.copy(label = line.take(LINE_MAX_LENGTH)) else l }
+        }
+        if (bus != null) legs = legs.withBus(leg, bus)
+        s.copy(legs = legs, status = ShareStatus.EDITING)
+    }
 
     fun selectChange(change: Int) = _ui.update { it.copy(selectedChange = change) }
 
@@ -178,3 +278,10 @@ class ShareState(
         }
     }
 }
+
+private fun ShareUi.withInput(change: (StopInput) -> StopInput): ShareUi =
+    editing?.let { copy(editing = it.copy(input = change(it.input))) } ?: this
+
+/** The changes moved, so notes pinned on them start over. */
+private fun ShareUi.routeChanged(legs: List<StripLeg>): ShareUi =
+    copy(legs = legs, editing = null, selectedChange = null, notes = emptyMap(), status = ShareStatus.EDITING)

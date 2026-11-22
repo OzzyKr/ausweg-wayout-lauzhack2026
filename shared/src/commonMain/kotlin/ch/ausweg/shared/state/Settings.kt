@@ -34,6 +34,9 @@ class MemorySettings(
 object SettingKeys {
     const val VOTER_ID = "voterId"
     const val LANGUAGE = "language"
+
+    /** This device's votes, target id → value (JSON), to highlight and take them back after a reload. */
+    const val MY_VOTES = "myVotes"
 }
 
 private const val VOTER_ID_LENGTH = 16

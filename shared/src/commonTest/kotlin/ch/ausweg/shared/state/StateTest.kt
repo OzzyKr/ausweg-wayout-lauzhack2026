@@ -15,11 +15,13 @@ import ch.ausweg.shared.model.Location
 import ch.ausweg.shared.model.Mode
 import ch.ausweg.shared.model.ReplacementBus
 import ch.ausweg.shared.model.StateResponse
+import ch.ausweg.shared.model.StopRef
 import ch.ausweg.shared.model.TimelineEntry
 import ch.ausweg.shared.model.VoteValue
 import ch.ausweg.shared.routing.Pick
 import ch.ausweg.shared.routing.Stage
 import ch.ausweg.shared.tips.StripKind
+import ch.ausweg.shared.tips.StripLeg
 import ch.ausweg.shared.tips.legStrip
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
@@ -232,9 +234,21 @@ class StateTest {
                 app.route.ui.value
                     ?.myVote,
             )
-            app.route.vote(VoteValue.UP) // a repeat is not sent
+            app.route.vote(VoteValue.UP) // the same vote again takes it back
             runCurrent()
-            assertEquals(1, api.calls.count { it.startsWith("voteRoute") })
+            assertEquals(2, api.calls.count { it.startsWith("voteRoute") })
+            assertTrue(api.calls.last().startsWith("voteRoute r1 null"))
+            assertNull(
+                app.route.ui.value
+                    ?.myVote,
+            )
+            app.route.vote(VoteValue.UP)
+            runCurrent()
+            assertEquals(
+                VoteValue.UP,
+                app.route.ui.value
+                    ?.myVote,
+            )
 
             app.takeRoute()
             runCurrent()
@@ -303,16 +317,12 @@ class StateTest {
                 share.ui.value.notes[0]
                     ?.length,
             )
-            share.toggle(1)
+            share.removeChange(1)
             assertEquals(1, share.ui.value.strip.legs.size)
             assertTrue(
                 share.ui.value.notes
                     .isEmpty(),
             )
-            share.toggle(0)
-            assertNull(newRoute(share.ui.value))
-
-            share.toggle(0)
             assertTrue(share.ui.value.canPost)
             api.failPost = true
             share.post()
@@ -321,21 +331,72 @@ class StateTest {
         }
 
     @Test
-    fun aMiddleRideCantBeLeftOut() {
-        val two = legStrip(Fx.viaYverdon("14:40", "15:50")).legs
-        val three = two + two.last()
-        val ui = ShareUi(legs = three, checked = listOf(true, false, true))
-        assertTrue(ui.hasGap)
-        assertFalse(ui.copy(checked = listOf(false, false, false)).hasGap)
-        assertFalse(ui.canPost)
-        assertNull(newRoute(ui))
-        assertTrue(ui.copy(checked = listOf(false, true, true)).canPost)
-    }
+    fun shareYourOwnRoute() =
+        runTest {
+            // Lausanne → Renens, shared as Lausanne → Yverdon → Renens.
+            val renens = StopRef("8501117", "Renens VD", 8501117)
+            val yverdon = Location(StopRef("ch:1:sloid:4200", "Yverdon-les-Bains", Fx.YVERDON))
+            val direct = StripLeg("R", StripKind.TRAIN, FakeApi.LAUSANNE, renens, departure = t("14:40"))
+            val share = ShareState(api, backgroundScope)
+            share.start(listOf(direct), disruptionId = null)
+
+            share.search(StopTarget.NewChange(0))
+            assertFalse(share.ui.value.canPost, "not while the stop search is open")
+            api.stops = listOf(yverdon)
+            share.typeStop("Yv")
+            advanceTimeBy(400)
+            runCurrent()
+            assertEquals(
+                listOf(yverdon),
+                share.ui.value.editing
+                    ?.input
+                    ?.suggestions,
+            )
+            share.chooseStop(yverdon)
+            assertNull(share.ui.value.editing)
+            assertEquals(
+                listOf("Lausanne", "Yverdon-les-Bains", "Renens VD"),
+                share.ui.value.stops
+                    .map { it.name },
+            )
+
+            share.ride(0, line = "IC 5 ")
+            share.ride(1, line = "R 3", bus = true)
+            share.post()
+            runCurrent()
+            val posted = api.posted.single()
+            assertEquals(listOf("IC 5", "R 3"), posted.legs.map { it.line })
+            assertEquals(listOf(LegMode.RAIL, LegMode.BUS), posted.legs.map { it.mode })
+            assertEquals(listOf(Fx.LAUSANNE, Fx.YVERDON), posted.legs.map { it.from.didok })
+            assertEquals(
+                8501117,
+                posted.legs
+                    .last()
+                    .to.didok,
+            )
+        }
+
+    @Test
+    fun aRideCantEndWhereItStarts() =
+        runTest {
+            val share = ShareState(api, backgroundScope)
+            share.start(legStrip(Fx.viaYverdon("14:40", "15:50")).legs, disruptionId = null)
+            share.search(StopTarget.Stop(1))
+            share.chooseStop(Location(FakeApi.LAUSANNE))
+            assertTrue(share.ui.value.hasLoop)
+            assertFalse(share.ui.value.canPost)
+            assertNull(newRoute(share.ui.value))
+            share.search(StopTarget.Stop(9))
+            assertNull(share.ui.value.editing, "no such stop")
+            share.search(StopTarget.Stop(1))
+            share.search(null)
+            assertNull(share.ui.value.editing)
+        }
 
     @Test
     fun sharedRoutesKeepTheRideMode() {
         val metro = ic1.copy(legs = ic1.legs.map { it.copy(mode = LegMode.METRO, line = "M2") })
-        val ui = ShareUi(legs = legStrip(metro).legs, checked = listOf(true))
+        val ui = ShareUi(legs = legStrip(metro).legs)
         assertEquals(listOf(LegMode.METRO), newRoute(ui)?.legs?.map { it.mode })
     }
 
